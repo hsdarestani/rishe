@@ -6,6 +6,7 @@ namespace Rishe\Tests\Tax;
 
 use PHPUnit\Framework\TestCase;
 use Rishe\Tax\Application\TaxService;
+use Rishe\Tax\Domain\Exception\TaxDomainException;
 use Rishe\Tax\Domain\TaxInvoiceNumberGenerator;
 use Rishe\Tax\Domain\TaxTotals;
 use Rishe\Tests\Tax\Fakes\ImmediateTransactionRunner;
@@ -85,6 +86,22 @@ final class TaxServiceTest extends TestCase
         self::assertSame('accepted', $submitted['status']);
         self::assertSame('REF-1', $submitted['reference_number']);
         self::assertCount(1, $this->gateway->submitted);
+    }
+
+    public function testRejectsSettlementThatDoesNotEqualInvoiceTotal(): void
+    {
+        $this->expectException(TaxDomainException::class);
+        $this->expectExceptionMessage('Cash and credit settlement must equal the tax invoice total.');
+
+        $this->service->createFromSalesOrder([
+            'profile_id' => 1,
+            'sales_order_id' => 10,
+            'buyer_type' => 2,
+            'buyer' => [],
+            'cash_irr' => 50000,
+            'credit_irr' => 50000,
+            'idempotency_key' => 'invalid-settlement',
+        ], 1);
     }
 
     public function testAcceptedInvoiceCanCreateCancellationWithoutMutation(): void
