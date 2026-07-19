@@ -7,6 +7,7 @@ namespace Rishe\Infrastructure\Database;
 use Rishe\Infrastructure\Database\Migrations\CreateAccountingTables;
 use Rishe\Infrastructure\Database\Migrations\CreateFoundationTables;
 use Rishe\Infrastructure\Database\Migrations\ProtectPostedVouchers;
+use Rishe\Infrastructure\Database\Migrations\ValidateJournalAssignments;
 use RuntimeException;
 
 final class Migrator
@@ -18,6 +19,7 @@ final class Migrator
             new CreateFoundationTables(),
             new CreateAccountingTables(),
             new ProtectPostedVouchers(),
+            new ValidateJournalAssignments(),
         ];
     }
 
