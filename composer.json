@@ -22,7 +22,8 @@
   },
   "scripts": {
     "lint": "phpcs -n --standard=phpcs.xml.dist",
-    "test": "phpunit --configuration phpunit.xml.dist"
+    "test": "phpunit --configuration phpunit.xml.dist",
+    "test:deployment": "phpunit --configuration phpunit.xml.dist tests/Deployment"
   },
   "config": {
     "sort-packages": true
