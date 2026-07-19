@@ -12,7 +12,7 @@
 
 declare(strict_types=1);
 
-if (! defined('ABSPATH')) {
+if (!defined('ABSPATH')) {
     exit;
 }
 
@@ -23,9 +23,9 @@ define('RISHE_PATH', plugin_dir_path(__FILE__));
 define('RISHE_URL', plugin_dir_url(__FILE__));
 
 $autoload = RISHE_PATH . 'vendor/autoload.php';
-if (! is_readable($autoload)) {
+if (!is_readable($autoload)) {
     add_action('admin_notices', static function (): void {
-        if (! current_user_can('activate_plugins')) {
+        if (!current_user_can('activate_plugins')) {
             return;
         }
 
