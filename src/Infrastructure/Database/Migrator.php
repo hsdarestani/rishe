@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Rishe\Infrastructure\Database;
 
 use Rishe\Infrastructure\Database\Migrations\CreateAccountingTables;
+use Rishe\Infrastructure\Database\Migrations\CreateB2BTables;
 use Rishe\Infrastructure\Database\Migrations\CreateFoundationTables;
 use Rishe\Infrastructure\Database\Migrations\CreateInventoryTables;
 use Rishe\Infrastructure\Database\Migrations\CreateManufacturingTables;
 use Rishe\Infrastructure\Database\Migrations\CreateProcurementTables;
 use Rishe\Infrastructure\Database\Migrations\CreateSalesCrmTables;
 use Rishe\Infrastructure\Database\Migrations\CreateTreasuryTables;
+use Rishe\Infrastructure\Database\Migrations\HardenB2BAccountGuard;
+use Rishe\Infrastructure\Database\Migrations\ProtectB2BLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectManufacturingLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectPostedVouchers;
 use Rishe\Infrastructure\Database\Migrations\ProtectProcurementLedger;
@@ -40,6 +43,9 @@ final class Migrator
             new ProtectTreasuryLedger(),
             new CreateProcurementTables(),
             new ProtectProcurementLedger(),
+            new CreateB2BTables(),
+            new ProtectB2BLedger(),
+            new HardenB2BAccountGuard(),
         ];
     }
 

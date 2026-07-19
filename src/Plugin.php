@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rishe;
 
 use Rishe\Accounting\Infrastructure\WordPress\AccountingRestApi;
+use Rishe\B2B\Infrastructure\WordPress\B2BRestApi;
 use Rishe\Infrastructure\Database\Migrator;
 use Rishe\Infrastructure\WordPress\AdminMenu;
 use Rishe\Infrastructure\WordPress\Capabilities;
@@ -33,6 +34,7 @@ final class Plugin
         (new SalesRestApi())->register();
         (new TreasuryRestApi())->register();
         (new ProcurementRestApi())->register();
+        (new B2BRestApi())->register();
 
         do_action('rishe/booted', $this);
     }
