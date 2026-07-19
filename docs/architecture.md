@@ -6,7 +6,7 @@ Rishe runs inside WordPress but treats WordPress as the runtime, identity provid
 
 - Domain and application code must not call WordPress hooks directly.
 - WordPress and WooCommerce integration belongs under `Infrastructure`.
-- Financial and stock ledgers are append-only after posting.
+- Financial, inventory, and production ledgers are append-only after posting or completion.
 - Cross-module side effects use audited application services and, where asynchronous delivery is needed, the outbox table.
 - Every use case that mutates more than one ERP record must execute through the transaction manager.
 
@@ -42,8 +42,18 @@ Stock reservations lock eligible batch rows and persist exact batch allocations.
 
 Database triggers reject invalid batch balances and all direct updates or deletes against stock movements and reservation allocations.
 
-All table names are prefixed with the active WordPress database prefix. ERP tables are retained during normal plugin uninstall to prevent accidental loss of financial or inventory records.
+## Manufacturing tables
+
+- `rishe_boms`
+- `rishe_bom_components`
+- `rishe_production_orders`
+- `rishe_production_consumptions`
+- `rishe_production_outputs`
+
+BOM activation retires an older active version with the same code. Production locks the active formula and eligible source batches, computes proportional requirements and waste, writes immutable component consumptions, creates a fully costed finished batch, writes production stock movements, and completes the order in one transaction.
+
+All table names are prefixed with the active WordPress database prefix. ERP tables are retained during normal plugin uninstall to prevent accidental loss of financial, inventory, or production records.
 
 ## Next bounded context
 
-Manufacturing and BOM will introduce formulas, material and packaging consumption, finished-goods receipts, waste, labor, and production conversion costing.
+Omnichannel sales and CRM will introduce unified customers, channel orders, WooCommerce ingestion, inventory reservations, payments, promotions, and automatic accounting integration.
