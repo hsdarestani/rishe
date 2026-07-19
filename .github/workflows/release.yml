@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Semantic version without the v prefix
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+          extensions: zip, openssl
+          tools: composer:v2
+      - uses: ramsey/composer-install@v3
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            version="${{ inputs.version }}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+      - name: Quality gates
+        run: |
+          composer lint
+          composer test
+          find scripts -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
+      - name: Load release signing key
+        shell: bash
+        env:
+          SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY_B64 }}
+          SIGNING_PUBLIC_KEY: ${{ secrets.RELEASE_SIGNING_PUBLIC_KEY_B64 }}
+        run: |
+          test -n "${SIGNING_KEY}" || { echo "RELEASE_SIGNING_KEY_B64 is required" >&2; exit 1; }
+          test -n "${SIGNING_PUBLIC_KEY}" || { echo "RELEASE_SIGNING_PUBLIC_KEY_B64 is required" >&2; exit 1; }
+          printf '%s' "${SIGNING_KEY}" | base64 -d > /tmp/rishe-release-private.pem
+          printf '%s' "${SIGNING_PUBLIC_KEY}" | base64 -d > /tmp/rishe-release-public.pem
+          chmod 600 /tmp/rishe-release-private.pem
+      - name: Build signed release
+        env:
+          RELEASE_SIGNING_KEY_PATH: /tmp/rishe-release-private.pem
+        run: scripts/build-release.sh "${{ steps.version.outputs.version }}" dist
+      - name: Add public key and dependency inventory
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          cp /tmp/rishe-release-public.pem "dist/rishe-${version}.pub.pem"
+          composer show --locked --format=json > "dist/rishe-${version}.dependencies.json"
+          scripts/verify-release.sh \
+            "dist/rishe-${version}.zip" \
+            "dist/rishe-${version}.zip.sha256" \
+            "dist/rishe-${version}.zip.sig" \
+            "dist/rishe-${version}.pub.pem"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rishe-${{ steps.version.outputs.version }}
+          path: dist/*
+          if-no-files-found: error
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dist/* --verify-tag --generate-notes
