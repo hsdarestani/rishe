@@ -75,7 +75,7 @@ final class WooCommerceOrderMapper
             throw new SalesDomainException('WooCommerce warehouse mapping is not configured.');
         }
 
-        $status = strtolower(trim((string) ($payload['status'] ?? 'pending'));
+        $status = strtolower(trim((string) ($payload['status'] ?? 'pending')));
         $transactionId = trim((string) ($payload['transaction_id'] ?? ''));
         $isPaid = ($payload['date_paid'] ?? null) !== null
             || in_array($status, ['processing', 'completed'], true);
