@@ -20,8 +20,9 @@ final class TransactionManager
     {
         global $wpdb;
 
+        $isOutermost = $this->level === 0;
         $savepoint = 'rishe_sp_' . $this->level;
-        $started = $this->level === 0
+        $started = $isOutermost
             ? $wpdb->query('START TRANSACTION')
             : $wpdb->query("SAVEPOINT {$savepoint}");
 
@@ -33,21 +34,10 @@ final class TransactionManager
 
         try {
             $result = $operation();
-            --$this->level;
-
-            $committed = $this->level === 0
-                ? $wpdb->query('COMMIT')
-                : $wpdb->query("RELEASE SAVEPOINT {$savepoint}");
-
-            if ($committed === false) {
-                throw new RuntimeException('Unable to commit database transaction.');
-            }
-
-            return $result;
         } catch (Throwable $exception) {
             --$this->level;
 
-            if ($this->level === 0) {
+            if ($isOutermost) {
                 $wpdb->query('ROLLBACK');
             } else {
                 $wpdb->query("ROLLBACK TO SAVEPOINT {$savepoint}");
@@ -55,5 +45,22 @@ final class TransactionManager
 
             throw $exception;
         }
+
+        --$this->level;
+        $committed = $isOutermost
+            ? $wpdb->query('COMMIT')
+            : $wpdb->query("RELEASE SAVEPOINT {$savepoint}");
+
+        if ($committed === false) {
+            if ($isOutermost) {
+                $wpdb->query('ROLLBACK');
+            } else {
+                $wpdb->query("ROLLBACK TO SAVEPOINT {$savepoint}");
+            }
+
+            throw new RuntimeException('Unable to commit database transaction.');
+        }
+
+        return $result;
     }
 }
