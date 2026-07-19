@@ -17,46 +17,19 @@ composer lint
 composer test
 ```
 
-Install the repository as a WordPress plugin, run `composer install`, and activate **Rishe ERP** from the WordPress administration panel.
+## Implemented bounded contexts
 
-## Implemented milestones
+- Foundation, audit, idempotency, outbox, migrations, and CI
+- Four-level accounting and immutable vouchers
+- Batch inventory, FIFO/LIFO, reservations, transfers, and COGS
+- Manufacturing, BOM, waste, labor, overhead, and finished-goods costing
+- Omnichannel sales, CRM, promotions, loyalty, WooCommerce, and sales accounting
+- Treasury, payment links, signed callbacks, settlement, and reconciliation
+- Procurement, landed costs, supplier liabilities, and accounts payable
+- B2B consignment, agent sales, commissions, credit limits, and settlements
+- Logistics carriers, quotes, labels, tracking, webhooks, costs, and settlement
+- Iranian fiscal invoicing, product/service mappings, immutable official snapshots, RSA signing, submission, inquiry, retries, correction, cancellation, and return invoices
 
-### Foundation
-
-Plugin bootstrapping, versioned migrations, ERP capabilities, protected REST health checks, transaction handling, audit storage, idempotency storage, integration outbox, coding standards, and CI.
-
-### Accounting core
-
-Four-level chart of accounts, integer-IRR journals, balanced draft vouchers, fiscal-year numbering, posting, immutable entries, reversals, audit events, and trial balance.
-
-### Inventory core
-
-Warehouses, products, scaled decimal quantities, batches, FIFO/LIFO, reservations, immutable movements, batch COGS, transfers, stock summaries, and ledgers.
-
-### Manufacturing and BOM
-
-Versioned formulas, material and packaging requirements, batch consumption, waste, labor and overhead costing, production records, and fully costed finished goods.
-
-### Omnichannel sales and CRM
-
-Unified customers, channel prices, promotions, loyalty, multi-channel orders, WooCommerce webhooks, stock reservation, payment capture, COGS, and sales accounting.
-
-### Treasury and payment links
-
-Bank, cash, POS and gateway accounts, configurable providers, encrypted credentials, payment links, signed callbacks, immutable transactions, settlements, and reconciliation.
-
-### Procurement and accounts payable
-
-Suppliers, purchase orders, partial receipts, landed-cost capitalization, supplier liabilities, treasury-backed payments, accounting, and supplier statements.
-
-### Consignment and B2B settlement
-
-Partner accounts, credit limits, consignment dispatch and return, agent sales reports, commissions, receivables, treasury settlement, and accounting.
-
-### Logistics integrations
-
-Configurable Post, Tipax, Snapp, AloPeyk and custom adapters; shipment and package snapshots; quotes; bookings; labels; tracking; signed webhooks; delivery exceptions; carrier costs; variance; and treasury settlement.
-
-The next milestone is Iranian fiscal invoicing and tax compliance: official invoices, taxpayer-system payloads, signing, submission, retries, corrections, and cancellation.
+Version `1.0.0` completes the ERP domain foundation. The next delivery track is production hardening and administration UX: real-provider certification, WordPress admin screens, background queues, observability, import/export, and deployment tooling.
 
 See `AGENTS.md` for implementation rules and `docs/` for module APIs and invariants.

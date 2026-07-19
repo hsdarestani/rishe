@@ -160,13 +160,12 @@ trait LogisticsShipmentOperations
         return $this->transactions->run(function () use ($shipmentId, $carrierId, $serviceCode, $actor): array {
             $shipment = $this->lockedShipment($shipmentId);
             $status = $this->shipmentStatus($shipment);
-            $alreadyBookedStatuses = [
+            if (in_array($status, [
                 ShipmentStatus::BOOKED,
                 ShipmentStatus::LABEL_READY,
                 ShipmentStatus::IN_TRANSIT,
                 ShipmentStatus::DELIVERED,
-            ];
-            if (in_array($status, $alreadyBookedStatuses, true)) {
+            ], true)) {
                 return $this->requireShipment((int) $shipment['id']);
             }
             $status->assertCanBook();

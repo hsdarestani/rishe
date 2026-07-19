@@ -12,6 +12,7 @@ use Rishe\Infrastructure\Database\Migrations\CreateLogisticsTables;
 use Rishe\Infrastructure\Database\Migrations\CreateManufacturingTables;
 use Rishe\Infrastructure\Database\Migrations\CreateProcurementTables;
 use Rishe\Infrastructure\Database\Migrations\CreateSalesCrmTables;
+use Rishe\Infrastructure\Database\Migrations\CreateTaxTables;
 use Rishe\Infrastructure\Database\Migrations\CreateTreasuryTables;
 use Rishe\Infrastructure\Database\Migrations\HardenB2BAccountGuard;
 use Rishe\Infrastructure\Database\Migrations\ProtectB2BLedger;
@@ -21,13 +22,13 @@ use Rishe\Infrastructure\Database\Migrations\ProtectPostedVouchers;
 use Rishe\Infrastructure\Database\Migrations\ProtectProcurementLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectSalesLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectStockLedger;
+use Rishe\Infrastructure\Database\Migrations\ProtectTaxLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectTreasuryLedger;
 use Rishe\Infrastructure\Database\Migrations\ValidateJournalAssignments;
 use RuntimeException;
 
 final class Migrator
 {
-    /** @return list<Migration> */
     private function migrations(): array
     {
         return [
@@ -50,6 +51,8 @@ final class Migrator
             new HardenB2BAccountGuard(),
             new CreateLogisticsTables(),
             new ProtectLogisticsLedger(),
+            new CreateTaxTables(),
+            new ProtectTaxLedger(),
         ];
     }
 
@@ -58,7 +61,6 @@ final class Migrator
         if ((string) get_option('rishe_db_version', '') === RISHE_DB_VERSION) {
             return;
         }
-
         $this->migrate();
         update_option('rishe_db_version', RISHE_DB_VERSION, true);
     }
@@ -66,12 +68,10 @@ final class Migrator
     public function migrate(): void
     {
         $this->ensureMigrationTable();
-
         foreach ($this->migrations() as $migration) {
             if ($this->hasRun($migration->id())) {
                 continue;
             }
-
             $migration->up();
             $this->record($migration->id());
         }
@@ -80,12 +80,9 @@ final class Migrator
     private function ensureMigrationTable(): void
     {
         global $wpdb;
-
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-
         $table = $wpdb->prefix . 'rishe_migrations';
         $charset = $wpdb->get_charset_collate();
-
         dbDelta("CREATE TABLE {$table} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             migration varchar(191) NOT NULL,
@@ -93,7 +90,6 @@ final class Migrator
             PRIMARY KEY  (id),
             UNIQUE KEY migration (migration)
         ) {$charset};");
-
         $found = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table)));
         if ($found !== $table) {
             throw new RuntimeException('Unable to create the Rishe migrations table.');
@@ -103,7 +99,6 @@ final class Migrator
     private function hasRun(string $migration): bool
     {
         global $wpdb;
-
         $table = $wpdb->prefix . 'rishe_migrations';
         $query = $wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE migration = %s", $migration);
 
@@ -113,13 +108,11 @@ final class Migrator
     private function record(string $migration): void
     {
         global $wpdb;
-
         $inserted = $wpdb->insert(
             $wpdb->prefix . 'rishe_migrations',
             ['migration' => $migration, 'executed_at' => current_time('mysql', true)],
             ['%s', '%s']
         );
-
         if ($inserted === false) {
             throw new RuntimeException('Unable to record Rishe database migration.');
         }
