@@ -42,8 +42,7 @@ trait ProcurementOrderOperations
             $externalReference,
             $idempotencyKey,
             $correlationId,
-            $expectedAt,
-            $data
+            $expectedAt
         ): array {
             $supplier = $this->requireSupplier($supplierId);
             $lines = [];
@@ -169,11 +168,12 @@ trait ProcurementOrderOperations
             if ($status === null) {
                 throw new ProcurementDomainException('Purchase-order status is invalid.');
             }
-            if (in_array($status, [
+            $approvedStatuses = [
                 PurchaseOrderStatus::APPROVED,
                 PurchaseOrderStatus::PARTIALLY_RECEIVED,
                 PurchaseOrderStatus::RECEIVED,
-            ], true)) {
+            ];
+            if (in_array($status, $approvedStatuses, true)) {
                 return $this->requirePurchaseOrder((int) $order['id']);
             }
             $status->assertCanApprove();
