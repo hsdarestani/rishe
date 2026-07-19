@@ -21,7 +21,7 @@
     ]
   },
   "scripts": {
-    "lint": "phpcs --standard=phpcs.xml.dist",
+    "lint": "phpcs -n --standard=phpcs.xml.dist",
     "test": "phpunit --configuration phpunit.xml.dist"
   },
   "config": {
