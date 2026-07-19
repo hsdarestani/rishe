@@ -4,7 +4,7 @@ set -euo pipefail
 WP_PATH="${1:-/tmp/wordpress}"
 WP=(wp --path="${WP_PATH}" --allow-root)
 KEY="concurrency-$(date +%s)-${RANDOM}"
-LOG_DIR="/tmp/rishe-concurrency"
+LOG_DIR="${GITHUB_WORKSPACE:-/tmp}/rishe-concurrency"
 rm -rf "${LOG_DIR}"
 mkdir -p "${LOG_DIR}"
 
