@@ -57,6 +57,11 @@ final class Migrator
             PRIMARY KEY  (id),
             UNIQUE KEY migration (migration)
         ) {$charset};");
+
+        $found = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table)));
+        if ($found !== $table) {
+            throw new RuntimeException('Unable to create the Rishe migrations table.');
+        }
     }
 
     private function hasRun(string $migration): bool
