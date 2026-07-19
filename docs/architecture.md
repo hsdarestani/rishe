@@ -6,7 +6,7 @@ Rishe runs inside WordPress but treats WordPress as the runtime, identity provid
 
 - Domain and application code must not call WordPress hooks directly.
 - WordPress and WooCommerce integration belongs under `Infrastructure`.
-- Financial, inventory, production, sales-payment, and treasury ledgers are append-only after posting or completion.
+- Financial, inventory, production, sales-payment, treasury, and supplier ledgers are append-only after posting or completion.
 - Cross-module side effects use audited application services and, where asynchronous delivery is needed, the outbox table.
 - Every use case that mutates more than one ERP record must execute through the transaction manager.
 
@@ -78,8 +78,22 @@ Customer identity is normalized around a unique Iranian mobile number. Channel o
 
 Payment links are created locally before calling a provider and use the same idempotency reference at the provider boundary. Signed callbacks import an immutable credit transaction, capture a linked sales order, create the reconciliation match, and move the link to its terminal paid state. Bank and gateway transactions, matches, and settlements cannot be edited or deleted.
 
-All table names are prefixed with the active WordPress database prefix. ERP tables are retained during normal plugin uninstall to prevent accidental loss of financial, inventory, production, sales, CRM, or treasury records.
+## Procurement tables
+
+- `rishe_purchase_sequences`
+- `rishe_suppliers`
+- `rishe_purchase_orders`
+- `rishe_purchase_order_lines`
+- `rishe_purchase_receipts`
+- `rishe_purchase_receipt_lines`
+- `rishe_purchase_landed_costs`
+- `rishe_supplier_ledger`
+- `rishe_purchase_payments`
+
+Purchase orders are commercially mutable only while draft. Approval allocates an atomic fiscal-year number. Partial receipts prorate line discounts and input tax, allocate actual landed costs by merchandise value or quantity, create fully costed inventory batches, append supplier liability entries, and post accounting when configured. Supplier payments require debit treasury transactions and append both reconciliation and supplier-ledger entries.
+
+All table names are prefixed with the active WordPress database prefix. ERP tables are retained during normal plugin uninstall to prevent accidental loss of financial, inventory, production, sales, CRM, treasury, or procurement records.
 
 ## Next bounded context
 
-Procurement and accounts payable will introduce suppliers, purchase orders, landed costs, warehouse receipts, supplier liabilities, and payment workflows.
+Consignment and B2B settlement will introduce consignment dispatches, returns, agent sales reports, commissions, credit limits, and settlement workflows.

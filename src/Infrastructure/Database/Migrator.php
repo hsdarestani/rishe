@@ -8,10 +8,12 @@ use Rishe\Infrastructure\Database\Migrations\CreateAccountingTables;
 use Rishe\Infrastructure\Database\Migrations\CreateFoundationTables;
 use Rishe\Infrastructure\Database\Migrations\CreateInventoryTables;
 use Rishe\Infrastructure\Database\Migrations\CreateManufacturingTables;
+use Rishe\Infrastructure\Database\Migrations\CreateProcurementTables;
 use Rishe\Infrastructure\Database\Migrations\CreateSalesCrmTables;
 use Rishe\Infrastructure\Database\Migrations\CreateTreasuryTables;
 use Rishe\Infrastructure\Database\Migrations\ProtectManufacturingLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectPostedVouchers;
+use Rishe\Infrastructure\Database\Migrations\ProtectProcurementLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectSalesLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectStockLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectTreasuryLedger;
@@ -36,6 +38,8 @@ final class Migrator
             new ProtectSalesLedger(),
             new CreateTreasuryTables(),
             new ProtectTreasuryLedger(),
+            new CreateProcurementTables(),
+            new ProtectProcurementLedger(),
         ];
     }
 

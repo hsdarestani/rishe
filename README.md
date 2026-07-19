@@ -45,6 +45,10 @@ Unified mobile-based customers, channel prices, promotions, loyalty, multi-chann
 
 Bank, cash, POS, and gateway accounts; configurable providers including Blue Business; encrypted credentials; idempotent payment links; signed callbacks; immutable transactions and settlements; reconciliation; and automatic sales-payment matching.
 
-The next milestone is procurement and accounts payable: suppliers, purchase orders, landed costs, receipts, supplier debt, and payment workflows.
+### Procurement and accounts payable
+
+Suppliers, idempotent purchase orders, approval and immutable commercial snapshots, partial warehouse receipts, landed-cost allocation into inventory batches, supplier liabilities, treasury-backed payments, automatic accounting, and supplier statements.
+
+The next milestone is consignment and B2B settlement: consignment dispatches and returns, agent sales reports, commissions, credit limits, and settlement workflows.
 
 See `AGENTS.md` for Codex implementation rules and the documents under `docs/` for module APIs and invariants.
