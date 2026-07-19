@@ -8,5 +8,7 @@
     <arg name="basepath" value="."/>
     <arg name="colors"/>
     <arg value="sp"/>
-    <rule ref="PSR12"/>
+    <rule ref="PSR12">
+        <exclude name="Generic.Files.LineLength.TooLong"/>
+    </rule>
 </ruleset>
