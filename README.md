@@ -19,10 +19,16 @@ composer test
 
 Install the repository as a WordPress plugin, run `composer install`, and activate **Rishe ERP** from the WordPress administration panel.
 
-## Current milestone
+## Implemented milestones
 
-The foundation milestone provides plugin bootstrapping, versioned database migrations, ERP capabilities, a protected health endpoint, transaction handling, audit storage, idempotency storage, an outbox table, coding standards, and CI.
+### Foundation
 
-The next milestone is the accounting bounded context: chart of accounts, draft and posted vouchers, balanced journal entries, reversals, and trial balance reporting.
+Plugin bootstrapping, versioned database migrations, ERP capabilities, a protected health endpoint, transaction handling, audit storage, idempotency storage, an integration outbox, coding standards, and CI.
 
-See `AGENTS.md` for Codex implementation rules and `docs/architecture.md` for architectural boundaries.
+### Accounting core
+
+A four-level chart of accounts, integer-IRR journal lines, balanced draft vouchers, fiscal-year voucher numbering, final posting, immutable posted entries, reversal vouchers, audit events, and trial-balance reporting.
+
+The next milestone is inventory: warehouses, stock ledger, batches, reservations, transfers, and FIFO consumption.
+
+See `AGENTS.md` for Codex implementation rules, `docs/architecture.md` for architectural boundaries, and `docs/accounting.md` for accounting APIs and invariants.
