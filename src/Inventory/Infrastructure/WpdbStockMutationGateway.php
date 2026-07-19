@@ -63,8 +63,10 @@ final class WpdbStockMutationGateway
             $data['warehouse_id']
         ), ARRAY_A);
         if (is_array($existing)) {
-            if ((string) $existing['status'] === 'active'
-                && (int) $existing['quantity_scaled'] === (int) $data['quantity_scaled']) {
+            if (
+                (string) $existing['status'] === 'active'
+                && (int) $existing['quantity_scaled'] === (int) $data['quantity_scaled']
+            ) {
                 return ['id' => (int) $existing['id'], 'idempotent' => true];
             }
 
@@ -176,8 +178,10 @@ final class WpdbStockMutationGateway
         if ((string) $reservation['status'] !== 'active') {
             throw new InventoryDomainException('Only an active reservation can be committed.');
         }
-        if ($reservation['expires_at'] !== null
-            && (string) $reservation['expires_at'] < current_time('mysql', true)) {
+        if (
+            $reservation['expires_at'] !== null
+            && (string) $reservation['expires_at'] < current_time('mysql', true)
+        ) {
             throw new InventoryDomainException('Expired reservation must be released before stock can be used.');
         }
 
