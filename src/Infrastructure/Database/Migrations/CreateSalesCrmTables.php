@@ -229,10 +229,11 @@ final class CreateSalesCrmTables implements Migration
             KEY order_created (order_id, created_at)
         ) {$charset};");
 
-        foreach ([
+        $tables = [
             $customers, $customerChannels, $prices, $promotions, $orders,
             $lines, $payments, $redemptions, $loyalty, $history,
-        ] as $table) {
+        ];
+        foreach ($tables as $table) {
             $found = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table)));
             if ($found !== $table) {
                 throw new RuntimeException('Unable to create required sales/CRM table: ' . $table);
