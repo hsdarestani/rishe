@@ -7,8 +7,10 @@ namespace Rishe;
 use Rishe\Accounting\Infrastructure\WordPress\AccountingRestApi;
 use Rishe\Infrastructure\Database\Migrator;
 use Rishe\Infrastructure\WordPress\AdminMenu;
+use Rishe\Infrastructure\WordPress\Capabilities;
 use Rishe\Infrastructure\WordPress\RestApi;
 use Rishe\Inventory\Infrastructure\WordPress\InventoryRestApi;
+use Rishe\Manufacturing\Infrastructure\WordPress\ManufacturingRestApi;
 
 final class Plugin
 {
@@ -18,11 +20,13 @@ final class Plugin
 
         $migrator = new Migrator();
         $migrator->maybeMigrate();
+        Capabilities::maybeGrant();
 
         (new AdminMenu())->register();
         (new RestApi())->register();
         (new AccountingRestApi())->register();
         (new InventoryRestApi())->register();
+        (new ManufacturingRestApi())->register();
 
         do_action('rishe/booted', $this);
     }
