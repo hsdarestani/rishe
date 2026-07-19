@@ -7,15 +7,15 @@ namespace Rishe\Logistics\Domain;
 use DateTimeImmutable;
 use Rishe\Logistics\Domain\Exception\LogisticsDomainException;
 
-final readonly class TrackingEvent
+final class TrackingEvent
 {
     public function __construct(
-        public string $externalEventId,
-        public ShipmentStatus $status,
-        public string $occurredAt,
-        public ?string $description = null,
-        public ?string $location = null,
-        public ?string $rawHash = null
+        public readonly string $externalEventId,
+        public readonly ShipmentStatus $status,
+        public readonly string $occurredAt,
+        public readonly ?string $description = null,
+        public readonly ?string $location = null,
+        public readonly ?string $rawHash = null
     ) {
         if (trim($externalEventId) === '' || strlen($externalEventId) > 191) {
             throw new LogisticsDomainException('Tracking event id is required and is too long.');
