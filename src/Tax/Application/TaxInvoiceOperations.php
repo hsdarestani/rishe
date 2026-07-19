@@ -26,7 +26,9 @@ trait TaxInvoiceOperations
         foreach ($order['lines'] as $orderLine) {
             $mapping = $this->repository->productMapping($profileId, (int) $orderLine['product_id']);
             if ($mapping === null || !(bool) ($mapping['is_active'] ?? false)) {
-                throw new TaxDomainException('Tax product mapping is missing for product ' . $orderLine['product_id'] . '.');
+                throw new TaxDomainException(
+                    'Tax product mapping is missing for product ' . $orderLine['product_id'] . '.'
+                );
             }
             $gross = (int) $orderLine['gross_irr'];
             $discount = (int) $orderLine['line_discount_irr'];
@@ -51,6 +53,11 @@ trait TaxInvoiceOperations
             ];
         }
         $totals = $this->totals->calculate($lines);
+        $cashIrr = $this->nonNegativeMoney($data['cash_irr'] ?? $totals['total_irr'], 'cash_irr');
+        $creditIrr = $this->nonNegativeMoney($data['credit_irr'] ?? 0, 'credit_irr');
+        if ($cashIrr + $creditIrr !== $totals['total_irr']) {
+            throw new TaxDomainException('Cash and credit settlement must equal the tax invoice total.');
+        }
         $subject = TaxInvoiceSubject::ORIGINAL;
         $idempotencyKey = $this->requiredText($data['idempotency_key'] ?? null, 'idempotency_key', 100);
         $payloadHash = hash('sha256', json_encode([
@@ -58,6 +65,8 @@ trait TaxInvoiceOperations
             'sales_order_id' => $salesOrderId,
             'buyer' => $buyer,
             'lines' => $lines,
+            'cash_irr' => $cashIrr,
+            'credit_irr' => $creditIrr,
             'subject' => $subject->value,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
 
@@ -68,6 +77,8 @@ trait TaxInvoiceOperations
             $buyer,
             $lines,
             $totals,
+            $cashIrr,
+            $creditIrr,
             $subject,
             $idempotencyKey,
             $payloadHash,
@@ -91,8 +102,8 @@ trait TaxInvoiceOperations
                     'branch_code' => $profile['branch_code'],
                 ],
                 'totals' => $totals,
-                'cash_irr' => $this->nonNegativeMoney($data['cash_irr'] ?? $totals['total_irr'], 'cash_irr'),
-                'credit_irr' => $this->nonNegativeMoney($data['credit_irr'] ?? 0, 'credit_irr'),
+                'cash_irr' => $cashIrr,
+                'credit_irr' => $creditIrr,
                 'idempotency_key' => $idempotencyKey,
                 'payload_hash' => $payloadHash,
                 'correlation_id' => $this->nullableText($data['correlation_id'] ?? null, 64),
@@ -139,7 +150,10 @@ trait TaxInvoiceOperations
                 $serial
             );
             $payload = $this->canonicalPayload($invoice, $profile, $taxNumber, $serial, $issuedAt);
-            $payloadJson = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+            $payloadJson = json_encode(
+                $payload,
+                JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+            );
             $privateKey = $this->vault->open((string) $profile['private_key_ciphertext']);
             $signature = $this->signer->sign($payloadJson, $privateKey, $profile['key_id'] ?? null);
             $this->repository->freezeInvoice((int) $invoice['id'], [
@@ -175,7 +189,9 @@ trait TaxInvoiceOperations
         }
 
         return $this->transactions->run(function () use ($sourceInvoiceId, $subjectEnum, $actor): array {
-            $source = $this->repository->invoiceForUpdate($this->positiveId($sourceInvoiceId, 'source_invoice_id'));
+            $source = $this->repository->invoiceForUpdate(
+                $this->positiveId($sourceInvoiceId, 'source_invoice_id')
+            );
             if ($source === null || empty($source['tax_number'])) {
                 throw new TaxDomainException('Source tax invoice is missing or has not been frozen.');
             }
@@ -235,8 +251,13 @@ trait TaxInvoiceOperations
         ];
     }
 
-    private function canonicalPayload(array $invoice, array $profile, string $taxNumber, int $serial, string $issuedAt): array
-    {
+    private function canonicalPayload(
+        array $invoice,
+        array $profile,
+        string $taxNumber,
+        int $serial,
+        string $issuedAt
+    ): array {
         $issuedMs = strtotime($issuedAt) * 1000;
         $header = [
             'taxid' => $taxNumber,
@@ -282,7 +303,9 @@ trait TaxInvoiceOperations
         }, $invoice['lines']);
         $payments = array_map(static fn (array $payment): array => [
             'trn' => $payment['external_payment_id'] ?? null,
-            'pdt' => isset($payment['captured_at']) ? strtotime((string) $payment['captured_at']) * 1000 : null,
+            'pdt' => isset($payment['captured_at'])
+                ? strtotime((string) $payment['captured_at']) * 1000
+                : null,
             'pv' => (int) ($payment['amount_irr'] ?? 0),
         ], $invoice['payments']);
 
