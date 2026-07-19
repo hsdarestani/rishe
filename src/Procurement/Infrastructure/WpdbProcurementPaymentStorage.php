@@ -95,11 +95,12 @@ trait WpdbProcurementPaymentStorage
             return [];
         }
         $balance = 0;
+        $integerFields = [
+            'id', 'supplier_id', 'purchase_order_id', 'purchase_receipt_id', 'purchase_payment_id',
+            'charge_irr', 'payment_irr', 'actor_user_id',
+        ];
         foreach ($rows as &$row) {
-            foreach ([
-                'id', 'supplier_id', 'purchase_order_id', 'purchase_receipt_id', 'purchase_payment_id',
-                'charge_irr', 'payment_irr', 'actor_user_id',
-            ] as $field) {
+            foreach ($integerFields as $field) {
                 $row[$field] = $row[$field] === null ? null : (int) $row[$field];
             }
             $balance += (int) $row['charge_irr'] - (int) $row['payment_irr'];
