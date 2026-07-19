@@ -6,58 +6,31 @@ Rishe runs inside WordPress while treating WordPress as runtime, identity provid
 
 - Domain and application code do not call WordPress hooks directly.
 - WordPress, WooCommerce, carrier, bank, and tax integrations belong under `Infrastructure`.
-- Posted financial, inventory, production, sales, treasury, supplier, B2B, and logistics ledgers are append-only.
+- Posted financial, inventory, production, sales, treasury, supplier, B2B, logistics, and tax ledgers are append-only.
 - Multi-record mutations execute through the transaction manager.
 - External commands and webhooks use idempotency, signatures, immutable snapshots, and audit logs.
 
 ## Implemented bounded contexts
 
-### Foundation
+Foundation provides migrations, audit, replay protection, and outbox delivery. Accounting, inventory, manufacturing, sales, treasury, procurement, B2B, and logistics each own dedicated tables and application services.
 
-`rishe_migrations`, `rishe_audit_log`, `rishe_idempotency_keys`, and `rishe_outbox` provide schema versioning, auditability, replay protection, and reliable integration publication.
+### Tax compliance
 
-### Accounting
+- `rishe_tax_profiles`
+- `rishe_tax_product_mappings`
+- `rishe_tax_sequences`
+- `rishe_tax_invoices`
+- `rishe_tax_invoice_lines`
+- `rishe_tax_invoice_payments`
+- `rishe_tax_submissions`
+- `rishe_tax_status_events`
 
-Four-level chart tables, voucher sequences, vouchers, and journal entries support balanced posting and reversal without mutating posted lines.
+A tax invoice is created from an immutable sales-order snapshot. Freezing allocates a locked serial, generates the 22-character tax number, constructs the canonical header/body/payment payload, hashes it, and signs it with the encrypted taxpayer private key. Submission attempts and status inquiries append history instead of replacing it. Correction, cancellation, and return create linked invoices and never rewrite the source invoice.
 
-### Inventory
+The HTTP/JSON gateway is configurable because direct taxpayer submission and trusted-provider contracts may expose different endpoints, envelopes, headers, and response paths. Credentials and private keys are encrypted at rest.
 
-Warehouse, product, batch, reservation, allocation, and stock-movement tables support scaled quantities, FIFO/LIFO, locking, transfers, COGS, and immutable movement ledgers.
+All tables use the active WordPress database prefix. ERP records remain during normal uninstall to prevent accidental loss of operational or financial history.
 
-### Manufacturing
+## Production hardening track
 
-BOM, component, production-order, consumption, and output tables freeze formulas and trace input batches into fully costed finished batches.
-
-### Sales and CRM
-
-Customer, channel, price, promotion, order, payment, loyalty, and history tables manage unified customers and idempotent omnichannel sales.
-
-### Treasury
-
-Account, provider, payment-link, transaction, match, and settlement tables manage encrypted integrations and immutable bank reconciliation.
-
-### Procurement
-
-Supplier, purchase-order, receipt, landed-cost, payable-ledger, and payment tables convert supplier commitments into costed stock and liabilities.
-
-### B2B and consignment
-
-Partner account, dispatch, return, report, allocation, receivable-ledger, and settlement tables retain ownership during consignment and enforce credit limits.
-
-### Logistics
-
-- `rishe_logistics_carriers`
-- `rishe_shipments`
-- `rishe_shipment_packages`
-- `rishe_shipment_quotes`
-- `rishe_shipment_tracking_events`
-- `rishe_shipment_costs`
-- `rishe_logistics_settlements`
-
-Shipment creation freezes address, value, customer charge, COD, and package metrics. Carrier adapters translate a canonical payload into provider-specific HTTP/JSON contracts. Quotes, events, costs, and settlements are immutable. Signed webhooks advance a guarded shipment lifecycle, and debit treasury transactions settle only recorded carrier costs.
-
-All tables use the active WordPress database prefix. ERP records are retained during normal uninstall to prevent accidental loss of operational or financial history.
-
-## Next bounded context
-
-Iranian fiscal invoicing and tax compliance will add official invoice snapshots, taxpayer-system identifiers, payload generation, cryptographic signing, submission attempts, retries, correction invoices, and cancellation workflows.
+Provider certification, real MySQL concurrency tests, WordPress administration screens, Action Scheduler queues, observability, import/export, backup verification, and deployment automation remain outside the domain-core milestone.

@@ -15,6 +15,7 @@ use Rishe\Logistics\Infrastructure\WordPress\LogisticsRestApi;
 use Rishe\Manufacturing\Infrastructure\WordPress\ManufacturingRestApi;
 use Rishe\Procurement\Infrastructure\WordPress\ProcurementRestApi;
 use Rishe\Sales\Infrastructure\WordPress\SalesRestApi;
+use Rishe\Tax\Infrastructure\WordPress\TaxRestApi;
 use Rishe\Treasury\Infrastructure\WordPress\TreasuryRestApi;
 
 final class Plugin
@@ -37,6 +38,7 @@ final class Plugin
         (new ProcurementRestApi())->register();
         (new B2BRestApi())->register();
         (new LogisticsRestApi())->register();
+        (new TaxRestApi())->register();
 
         do_action('rishe/booted', $this);
     }
