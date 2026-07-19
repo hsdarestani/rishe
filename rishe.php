@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Plugin Name: Rishe ERP
  * Plugin URI: https://github.com/hsdarestani/rishe
