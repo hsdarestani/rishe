@@ -37,6 +37,10 @@ Multiple warehouses, products and units, scaled decimal quantities, batch tracki
 
 Versioned formulas, raw-material and packaging requirements, FIFO/LIFO batch consumption, explicit waste, labor and overhead costing, immutable production consumption/output records, and finished-goods receipts carrying full production unit cost.
 
-The next milestone is omnichannel sales and CRM: customer identity, channel orders, WooCommerce ingestion, inventory reservations, payment lifecycle, and automatic accounting events.
+### Omnichannel sales and CRM
+
+Unified mobile-based customers, channel prices, promotions, loyalty, multi-channel orders, WooCommerce webhook ingestion, inventory reservations, captured payments, batch-level COGS, and automatic accounting posting with retry support.
+
+The next milestone is treasury and payment links: bank accounts, gateways, settlement reconciliation, Blue Business links, and webhook-driven matching.
 
 See `AGENTS.md` for Codex implementation rules and the documents under `docs/` for module APIs and invariants.
