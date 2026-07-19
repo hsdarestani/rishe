@@ -65,6 +65,13 @@ jobs:
           wp rishe certify --path=/tmp/wordpress --allow-root --environment=staging --format=json
       - name: Concurrent idempotency and worker smoke test
         run: scripts/concurrency-smoke.sh /tmp/wordpress
+      - name: Upload concurrency diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: concurrency-${{ strategy.job-index }}-${{ matrix.database }}
+          path: /tmp/rishe-concurrency
+          if-no-files-found: ignore
       - name: Immutable job-event trigger smoke test
         shell: bash
         run: |
