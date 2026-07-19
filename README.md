@@ -41,6 +41,10 @@ Versioned formulas, raw-material and packaging requirements, FIFO/LIFO batch con
 
 Unified mobile-based customers, channel prices, promotions, loyalty, multi-channel orders, WooCommerce webhook ingestion, inventory reservations, captured payments, batch-level COGS, and automatic accounting posting with retry support.
 
-The next milestone is treasury and payment links: bank accounts, gateways, settlement reconciliation, Blue Business links, and webhook-driven matching.
+### Treasury and payment links
+
+Bank, cash, POS, and gateway accounts; configurable providers including Blue Business; encrypted credentials; idempotent payment links; signed callbacks; immutable transactions and settlements; reconciliation; and automatic sales-payment matching.
+
+The next milestone is procurement and accounts payable: suppliers, purchase orders, landed costs, receipts, supplier debt, and payment workflows.
 
 See `AGENTS.md` for Codex implementation rules and the documents under `docs/` for module APIs and invariants.

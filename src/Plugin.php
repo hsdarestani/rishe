@@ -12,6 +12,7 @@ use Rishe\Infrastructure\WordPress\RestApi;
 use Rishe\Inventory\Infrastructure\WordPress\InventoryRestApi;
 use Rishe\Manufacturing\Infrastructure\WordPress\ManufacturingRestApi;
 use Rishe\Sales\Infrastructure\WordPress\SalesRestApi;
+use Rishe\Treasury\Infrastructure\WordPress\TreasuryRestApi;
 
 final class Plugin
 {
@@ -29,6 +30,7 @@ final class Plugin
         (new InventoryRestApi())->register();
         (new ManufacturingRestApi())->register();
         (new SalesRestApi())->register();
+        (new TreasuryRestApi())->register();
 
         do_action('rishe/booted', $this);
     }

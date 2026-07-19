@@ -11,3 +11,7 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 delete_option('rishe_version');
 delete_option('rishe_db_version');
 delete_option('rishe_capabilities_version');
+
+global $wpdb;
+$like = $wpdb->esc_like('rishe_treasury_secret_') . '%';
+$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $like));
