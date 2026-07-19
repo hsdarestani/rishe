@@ -17,25 +17,31 @@ if (! defined('ABSPATH')) {
 }
 
 define('RISHE_VERSION', '0.1.0');
+define('RISHE_DB_VERSION', '2026071901');
 define('RISHE_FILE', __FILE__);
 define('RISHE_PATH', plugin_dir_path(__FILE__));
 define('RISHE_URL', plugin_dir_url(__FILE__));
 
 $autoload = RISHE_PATH . 'vendor/autoload.php';
-if (is_readable($autoload)) {
-    require_once $autoload;
+if (! is_readable($autoload)) {
+    add_action('admin_notices', static function (): void {
+        if (! current_user_can('activate_plugins')) {
+            return;
+        }
+
+        echo '<div class="notice notice-error"><p>';
+        echo esc_html__('Rishe ERP dependencies are missing. Run composer install in the plugin directory.', 'rishe');
+        echo '</p></div>';
+    });
+
+    return;
 }
 
-register_activation_hook(__FILE__, static function (): void {
-    if (class_exists(\Rishe\Infrastructure\WordPress\Activator::class)) {
-        \Rishe\Infrastructure\WordPress\Activator::activate();
-    }
-});
+require_once $autoload;
+
+register_activation_hook(RISHE_FILE, [\Rishe\Infrastructure\WordPress\Activator::class, 'activate']);
+register_deactivation_hook(RISHE_FILE, [\Rishe\Infrastructure\WordPress\Activator::class, 'deactivate']);
 
 add_action('plugins_loaded', static function (): void {
-    if (! class_exists(\Rishe\Plugin::class)) {
-        return;
-    }
-
     (new \Rishe\Plugin())->boot();
 });
