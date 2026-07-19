@@ -10,6 +10,7 @@ use Rishe\Infrastructure\Database\Migrations\CreateFoundationTables;
 use Rishe\Infrastructure\Database\Migrations\CreateInventoryTables;
 use Rishe\Infrastructure\Database\Migrations\CreateLogisticsTables;
 use Rishe\Infrastructure\Database\Migrations\CreateManufacturingTables;
+use Rishe\Infrastructure\Database\Migrations\CreateOperationsTables;
 use Rishe\Infrastructure\Database\Migrations\CreateProcurementTables;
 use Rishe\Infrastructure\Database\Migrations\CreateSalesCrmTables;
 use Rishe\Infrastructure\Database\Migrations\CreateTaxTables;
@@ -18,6 +19,7 @@ use Rishe\Infrastructure\Database\Migrations\HardenB2BAccountGuard;
 use Rishe\Infrastructure\Database\Migrations\ProtectB2BLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectLogisticsLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectManufacturingLedger;
+use Rishe\Infrastructure\Database\Migrations\ProtectOperationsLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectPostedVouchers;
 use Rishe\Infrastructure\Database\Migrations\ProtectProcurementLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectSalesLedger;
@@ -29,6 +31,7 @@ use RuntimeException;
 
 final class Migrator
 {
+    /** @return list<Migration> */
     private function migrations(): array
     {
         return [
@@ -53,6 +56,8 @@ final class Migrator
             new ProtectLogisticsLedger(),
             new CreateTaxTables(),
             new ProtectTaxLedger(),
+            new CreateOperationsTables(),
+            new ProtectOperationsLedger(),
         ];
     }
 

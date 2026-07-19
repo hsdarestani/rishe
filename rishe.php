@@ -4,7 +4,7 @@
  * Plugin Name: Rishe ERP
  * Plugin URI: https://github.com/hsdarestani/rishe
  * Description: Modular ERP and omnichannel operations platform for WooCommerce.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Hossein Darestani
  * Requires at least: 6.5
  * Requires PHP: 8.1
@@ -17,8 +17,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('RISHE_VERSION', '1.0.0');
-define('RISHE_DB_VERSION', '2026071920');
+define('RISHE_VERSION', '1.1.0');
+define('RISHE_DB_VERSION', '2026071922');
 define('RISHE_FILE', __FILE__);
 define('RISHE_PATH', plugin_dir_path(__FILE__));
 define('RISHE_URL', plugin_dir_url(__FILE__));
