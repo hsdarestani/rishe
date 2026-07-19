@@ -8,8 +8,10 @@ use Rishe\Infrastructure\Database\Migrations\CreateAccountingTables;
 use Rishe\Infrastructure\Database\Migrations\CreateFoundationTables;
 use Rishe\Infrastructure\Database\Migrations\CreateInventoryTables;
 use Rishe\Infrastructure\Database\Migrations\CreateManufacturingTables;
+use Rishe\Infrastructure\Database\Migrations\CreateSalesCrmTables;
 use Rishe\Infrastructure\Database\Migrations\ProtectManufacturingLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectPostedVouchers;
+use Rishe\Infrastructure\Database\Migrations\ProtectSalesLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectStockLedger;
 use Rishe\Infrastructure\Database\Migrations\ValidateJournalAssignments;
 use RuntimeException;
@@ -28,6 +30,8 @@ final class Migrator
             new ProtectStockLedger(),
             new CreateManufacturingTables(),
             new ProtectManufacturingLedger(),
+            new CreateSalesCrmTables(),
+            new ProtectSalesLedger(),
         ];
     }
 

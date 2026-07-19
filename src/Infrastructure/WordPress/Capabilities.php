@@ -6,7 +6,7 @@ namespace Rishe\Infrastructure\WordPress;
 
 final class Capabilities
 {
-    private const VERSION = '2026071901';
+    private const VERSION = '2026071902';
 
     /** @var list<string> */
     private const ALL = [

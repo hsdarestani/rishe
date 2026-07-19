@@ -52,8 +52,23 @@ Database triggers reject invalid batch balances and all direct updates or delete
 
 BOM activation retires an older active version with the same code. Production locks the active formula and eligible source batches, computes proportional requirements and waste, writes immutable component consumptions, creates a fully costed finished batch, writes production stock movements, and completes the order in one transaction.
 
-All table names are prefixed with the active WordPress database prefix. ERP tables are retained during normal plugin uninstall to prevent accidental loss of financial, inventory, or production records.
+## Sales and CRM tables
+
+- `rishe_customers`
+- `rishe_customer_channels`
+- `rishe_channel_prices`
+- `rishe_promotions`
+- `rishe_sales_orders`
+- `rishe_sales_order_lines`
+- `rishe_sales_payments`
+- `rishe_promotion_redemptions`
+- `rishe_loyalty_ledger`
+- `rishe_order_status_history`
+
+Customer identity is normalized around a unique Iranian mobile number. Channel orders are idempotent by external order id or explicit idempotency key. Order creation reserves every stock line in the same transaction; payment commits reservations, calculates batch-level COGS, posts accounting when configured, and records immutable payment and loyalty entries.
+
+All table names are prefixed with the active WordPress database prefix. ERP tables are retained during normal plugin uninstall to prevent accidental loss of financial, inventory, production, sales, or CRM records.
 
 ## Next bounded context
 
-Omnichannel sales and CRM will introduce unified customers, channel orders, WooCommerce ingestion, inventory reservations, payments, promotions, and automatic accounting integration.
+Treasury will introduce bank accounts, payment links, provider callbacks, settlement reconciliation, and automated matching of bank and gateway transactions.
