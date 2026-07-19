@@ -13,6 +13,7 @@ use Rishe\Operations\Domain\BackoffPolicy;
 use Rishe\Operations\Domain\ConfigurationPackage;
 use Rishe\Operations\Domain\DiagnosticSummary;
 use Rishe\Operations\Infrastructure\Handlers\LogisticsTrackingRefreshJobHandler;
+use Rishe\Operations\Infrastructure\Handlers\SystemNoopJobHandler;
 use Rishe\Operations\Infrastructure\Handlers\TaxInquiryJobHandler;
 use Rishe\Operations\Infrastructure\Handlers\TaxSubmitJobHandler;
 use Rishe\Operations\Infrastructure\StaticJobHandlerRegistry;
@@ -30,6 +31,7 @@ final class OperationsServiceFactory
         $tax = (new TaxServiceFactory())->create();
         $logistics = (new LogisticsServiceFactory())->create();
         $handlers = new StaticJobHandlerRegistry([
+            new SystemNoopJobHandler(),
             new TaxSubmitJobHandler($tax),
             new TaxInquiryJobHandler($tax),
             new LogisticsTrackingRefreshJobHandler($logistics),
