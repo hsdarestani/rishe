@@ -6,7 +6,9 @@ namespace Rishe\Infrastructure\Database;
 
 use Rishe\Infrastructure\Database\Migrations\CreateAccountingTables;
 use Rishe\Infrastructure\Database\Migrations\CreateFoundationTables;
+use Rishe\Infrastructure\Database\Migrations\CreateInventoryTables;
 use Rishe\Infrastructure\Database\Migrations\ProtectPostedVouchers;
+use Rishe\Infrastructure\Database\Migrations\ProtectStockLedger;
 use Rishe\Infrastructure\Database\Migrations\ValidateJournalAssignments;
 use RuntimeException;
 
@@ -20,6 +22,8 @@ final class Migrator
             new CreateAccountingTables(),
             new ProtectPostedVouchers(),
             new ValidateJournalAssignments(),
+            new CreateInventoryTables(),
+            new ProtectStockLedger(),
         ];
     }
 

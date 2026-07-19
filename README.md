@@ -29,6 +29,10 @@ Plugin bootstrapping, versioned database migrations, ERP capabilities, a protect
 
 A four-level chart of accounts, integer-IRR journal lines, balanced draft vouchers, fiscal-year voucher numbering, final posting, immutable posted entries, reversal vouchers, audit events, and trial-balance reporting.
 
-The next milestone is inventory: warehouses, stock ledger, batches, reservations, transfers, and FIFO consumption.
+### Inventory core
 
-See `AGENTS.md` for Codex implementation rules, `docs/architecture.md` for architectural boundaries, and `docs/accounting.md` for accounting APIs and invariants.
+Multiple warehouses, products and units, scaled decimal quantities, batch tracking, FIFO/LIFO allocation, idempotent reservations, reservation commit and release, immutable stock movements, COGS by batch, transfers, stock summary, and ledger reporting.
+
+The next milestone is manufacturing and BOM: packaging formulas, material consumption, finished-goods receipts, waste, labor, and conversion cost.
+
+See `AGENTS.md` for Codex implementation rules and the documents under `docs/` for module APIs and invariants.

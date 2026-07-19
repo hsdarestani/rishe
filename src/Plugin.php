@@ -8,6 +8,7 @@ use Rishe\Accounting\Infrastructure\WordPress\AccountingRestApi;
 use Rishe\Infrastructure\Database\Migrator;
 use Rishe\Infrastructure\WordPress\AdminMenu;
 use Rishe\Infrastructure\WordPress\RestApi;
+use Rishe\Inventory\Infrastructure\WordPress\InventoryRestApi;
 
 final class Plugin
 {
@@ -21,6 +22,7 @@ final class Plugin
         (new AdminMenu())->register();
         (new RestApi())->register();
         (new AccountingRestApi())->register();
+        (new InventoryRestApi())->register();
 
         do_action('rishe/booted', $this);
     }
