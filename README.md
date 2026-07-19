@@ -23,4 +23,6 @@ Install the repository as a WordPress plugin, run `composer install`, and activa
 
 The foundation milestone provides plugin bootstrapping, versioned database migrations, ERP capabilities, a protected health endpoint, transaction handling, audit storage, idempotency storage, an outbox table, coding standards, and CI.
 
+The next milestone is the accounting bounded context: chart of accounts, draft and posted vouchers, balanced journal entries, reversals, and trial balance reporting.
+
 See `AGENTS.md` for Codex implementation rules and `docs/architecture.md` for architectural boundaries.
