@@ -69,12 +69,20 @@ jobs:
           wp rishe certify --path=/tmp/wordpress --allow-root --environment=staging --format=json
       - name: Concurrent idempotency and worker smoke test
         run: scripts/concurrency-smoke.sh /tmp/wordpress
+      - name: Package concurrency diagnostics
+        if: always()
+        run: |
+          mkdir -p rishe-concurrency
+          if [[ ! -f rishe-concurrency/summary.log ]]; then
+            echo "No summary was produced." > rishe-concurrency/summary.log
+          fi
+          tar -czf "concurrency-${{ matrix.label }}.tgz" rishe-concurrency
       - name: Upload concurrency diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: concurrency-${{ matrix.label }}
-          path: rishe-concurrency
+          path: concurrency-${{ matrix.label }}.tgz
           if-no-files-found: error
       - name: Immutable job-event trigger smoke test
         shell: bash
