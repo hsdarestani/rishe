@@ -410,10 +410,11 @@ final class WpdbOrderMutationGateway
         ), ARRAY_A);
 
         return array_map(static function (array $row): array {
-            foreach ([
+            $fields = [
                 'id', 'order_id', 'product_id', 'quantity_scaled', 'unit_price_irr', 'gross_irr',
                 'line_discount_irr', 'net_irr', 'reservation_id', 'cogs_irr',
-            ] as $field) {
+            ];
+            foreach ($fields as $field) {
                 $row[$field] = $row[$field] === null ? null : (int) $row[$field];
             }
 
@@ -482,12 +483,13 @@ final class WpdbOrderMutationGateway
     /** @param array<string, mixed> $row @return array<string, mixed> */
     private function formatOrder(array $row): array
     {
-        foreach ([
+        $fields = [
             'id', 'customer_id', 'warehouse_id', 'gross_irr', 'line_discount_irr', 'subtotal_irr',
             'promotion_discount_irr', 'loyalty_discount_irr', 'shipping_irr', 'tax_irr', 'total_irr',
             'cogs_irr', 'loyalty_points_redeemed', 'loyalty_points_earned', 'promotion_id',
             'accounting_voucher_id', 'accounting_voucher_number', 'created_by',
-        ] as $field) {
+        ];
+        foreach ($fields as $field) {
             $row[$field] = $row[$field] === null ? null : (int) $row[$field];
         }
 
