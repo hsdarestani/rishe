@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 }
 
 define('RISHE_VERSION', '0.2.0');
-define('RISHE_DB_VERSION', '2026071902');
+define('RISHE_DB_VERSION', '2026071903');
 define('RISHE_FILE', __FILE__);
 define('RISHE_PATH', plugin_dir_path(__FILE__));
 define('RISHE_URL', plugin_dir_url(__FILE__));
