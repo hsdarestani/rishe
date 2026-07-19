@@ -7,7 +7,7 @@ namespace Rishe\Shared\Audit;
 use JsonException;
 use RuntimeException;
 
-final class AuditLogger
+final class AuditLogger implements AuditRecorder
 {
     /** @param array<string, mixed> $payload */
     public function record(
