@@ -20,13 +20,15 @@ trait OperationsFailureOperations
             $nextStatus = OperationJobStatus::RETRY_WAIT;
         }
         $message = substr($exception->getMessage(), 0, 2000);
+        $exceptionClass = $exception::class;
         $this->transactions->run(function () use (
             $job,
             $lockToken,
             $nextStatus,
             $message,
             $nextRetryAt,
-            $attempt
+            $attempt,
+            $exceptionClass
         ): void {
             $this->repository->markFailed(
                 (int) $job['id'],
@@ -40,7 +42,7 @@ trait OperationsFailureOperations
                 'status_from' => OperationJobStatus::RUNNING->value,
                 'status_to' => $nextStatus->value,
                 'message' => $message,
-                'context' => ['attempt' => $attempt, 'exception' => $exception::class],
+                'context' => ['attempt' => $attempt, 'exception' => $exceptionClass],
                 'actor_user_id' => $job['created_by'],
                 'correlation_id' => $job['correlation_id'],
             ]);
@@ -48,7 +50,7 @@ trait OperationsFailureOperations
         if ($willRetry && $nextRetryAt !== null) {
             $this->scheduler->schedule((int) $job['id'], $nextRetryAt);
         } else {
-            $this->recordTerminalIncident($job, $message, $exception::class);
+            $this->recordTerminalIncident($job, $message, $exceptionClass);
         }
         $this->audit->record('operations.job.' . $nextStatus->value, 'operation_job', (string) $job['id'], [
             'job_type' => $job['job_type'],
