@@ -23,36 +23,40 @@ Install the repository as a WordPress plugin, run `composer install`, and activa
 
 ### Foundation
 
-Plugin bootstrapping, versioned database migrations, ERP capabilities, a protected health endpoint, transaction handling, audit storage, idempotency storage, an integration outbox, coding standards, and CI.
+Plugin bootstrapping, versioned migrations, ERP capabilities, protected REST health checks, transaction handling, audit storage, idempotency storage, integration outbox, coding standards, and CI.
 
 ### Accounting core
 
-A four-level chart of accounts, integer-IRR journal lines, balanced draft vouchers, fiscal-year voucher numbering, final posting, immutable posted entries, reversal vouchers, audit events, and trial-balance reporting.
+Four-level chart of accounts, integer-IRR journals, balanced draft vouchers, fiscal-year numbering, posting, immutable entries, reversals, audit events, and trial balance.
 
 ### Inventory core
 
-Multiple warehouses, products and units, scaled decimal quantities, batch tracking, FIFO/LIFO allocation, idempotent reservations, reservation commit and release, immutable stock movements, COGS by batch, transfers, stock summary, and ledger reporting.
+Warehouses, products, scaled decimal quantities, batches, FIFO/LIFO, reservations, immutable movements, batch COGS, transfers, stock summaries, and ledgers.
 
 ### Manufacturing and BOM
 
-Versioned formulas, raw-material and packaging requirements, FIFO/LIFO batch consumption, explicit waste, labor and overhead costing, immutable production consumption/output records, and finished-goods receipts carrying full production unit cost.
+Versioned formulas, material and packaging requirements, batch consumption, waste, labor and overhead costing, production records, and fully costed finished goods.
 
 ### Omnichannel sales and CRM
 
-Unified mobile-based customers, channel prices, promotions, loyalty, multi-channel orders, WooCommerce webhook ingestion, inventory reservations, captured payments, batch-level COGS, and automatic accounting posting with retry support.
+Unified customers, channel prices, promotions, loyalty, multi-channel orders, WooCommerce webhooks, stock reservation, payment capture, COGS, and sales accounting.
 
 ### Treasury and payment links
 
-Bank, cash, POS, and gateway accounts; configurable providers including Blue Business; encrypted credentials; idempotent payment links; signed callbacks; immutable transactions and settlements; reconciliation; and automatic sales-payment matching.
+Bank, cash, POS and gateway accounts, configurable providers, encrypted credentials, payment links, signed callbacks, immutable transactions, settlements, and reconciliation.
 
 ### Procurement and accounts payable
 
-Suppliers, idempotent purchase orders, approval and immutable commercial snapshots, partial warehouse receipts, landed-cost allocation into inventory batches, supplier liabilities, treasury-backed payments, automatic accounting, and supplier statements.
+Suppliers, purchase orders, partial receipts, landed-cost capitalization, supplier liabilities, treasury-backed payments, accounting, and supplier statements.
 
 ### Consignment and B2B settlement
 
-B2B partner accounts, dedicated consignment warehouses, credit limits, idempotent dispatches and returns, FIFO dispatch allocation, agent sales reports, commission calculation, inventory consumption, receivable ledgers, treasury-backed settlements, and automatic accounting.
+Partner accounts, credit limits, consignment dispatch and return, agent sales reports, commissions, receivables, treasury settlement, and accounting.
 
-The next milestone is logistics integrations: shipments, carrier adapters, labels, tracking events, delivery exceptions, and shipping-cost reconciliation.
+### Logistics integrations
 
-See `AGENTS.md` for Codex implementation rules and the documents under `docs/` for module APIs and invariants.
+Configurable Post, Tipax, Snapp, AloPeyk and custom adapters; shipment and package snapshots; quotes; bookings; labels; tracking; signed webhooks; delivery exceptions; carrier costs; variance; and treasury settlement.
+
+The next milestone is Iranian fiscal invoicing and tax compliance: official invoices, taxpayer-system payloads, signing, submission, retries, corrections, and cancellation.
+
+See `AGENTS.md` for implementation rules and `docs/` for module APIs and invariants.
