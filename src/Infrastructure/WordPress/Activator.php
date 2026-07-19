@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Rishe\Infrastructure\WordPress;
 
 use Rishe\Infrastructure\Database\Migrator;
+use Rishe\Operations\Infrastructure\WordPress\OperationsRuntime;
+use Rishe\Operations\Infrastructure\WpJobScheduler;
 use RuntimeException;
 
 final class Activator
@@ -22,6 +24,12 @@ final class Activator
     public static function deactivate(): void
     {
         wp_clear_scheduled_hook('rishe/hourly_maintenance');
+        wp_clear_scheduled_hook(WpJobScheduler::HOOK);
+        wp_clear_scheduled_hook(OperationsRuntime::MAINTENANCE_HOOK);
+        if (function_exists('as_unschedule_all_actions')) {
+            as_unschedule_all_actions(WpJobScheduler::HOOK, [], 'rishe-operations');
+            as_unschedule_all_actions(OperationsRuntime::MAINTENANCE_HOOK, [], 'rishe-operations');
+        }
     }
 
     private static function assertRequirements(): void

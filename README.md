@@ -28,8 +28,9 @@ composer test
 - Procurement, landed costs, supplier liabilities, and accounts payable
 - B2B consignment, agent sales, commissions, credit limits, and settlements
 - Logistics carriers, quotes, labels, tracking, webhooks, costs, and settlement
-- Iranian fiscal invoicing, product/service mappings, immutable official snapshots, RSA signing, submission, inquiry, retries, correction, cancellation, and return invoices
+- Iranian fiscal invoicing, official product mappings, immutable snapshots, RSA signing, submission, inquiry, retries, correction, cancellation, and returns
+- Operations control center, durable background jobs, retry backoff, incidents, diagnostics, audit visibility, and safe non-secret configuration import/export
 
-Version `1.0.0` completes the ERP domain foundation. The next delivery track is production hardening and administration UX: real-provider certification, WordPress admin screens, background queues, observability, import/export, and deployment tooling.
+Version `1.1.0` adds the WordPress administration and operational-hardening foundation. The next delivery track is production certification and deployment automation: real provider contracts, MySQL concurrency suites, backup/restore verification, WP-CLI tools, staging promotion, and release packaging.
 
 See `AGENTS.md` for implementation rules and `docs/` for module APIs and invariants.
