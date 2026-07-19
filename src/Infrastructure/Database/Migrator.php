@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rishe\Infrastructure\Database;
 
+use Rishe\Infrastructure\Database\Migrations\CreateAccountingTables;
 use Rishe\Infrastructure\Database\Migrations\CreateFoundationTables;
 use RuntimeException;
 
@@ -14,6 +15,7 @@ final class Migrator
     {
         return [
             new CreateFoundationTables(),
+            new CreateAccountingTables(),
         ];
     }
 
