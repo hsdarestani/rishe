@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Rishe\Infrastructure\Database;
 
+use Rishe\Shared\Database\TransactionRunner;
 use RuntimeException;
 use Throwable;
 
-final class TransactionManager
+final class TransactionManager implements TransactionRunner
 {
     private int $level = 0;
 

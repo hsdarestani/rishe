@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rishe;
 
+use Rishe\Accounting\Infrastructure\WordPress\AccountingRestApi;
 use Rishe\Infrastructure\Database\Migrator;
 use Rishe\Infrastructure\WordPress\AdminMenu;
 use Rishe\Infrastructure\WordPress\RestApi;
@@ -19,6 +20,7 @@ final class Plugin
 
         (new AdminMenu())->register();
         (new RestApi())->register();
+        (new AccountingRestApi())->register();
 
         do_action('rishe/booted', $this);
     }
