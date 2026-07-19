@@ -6,7 +6,7 @@ namespace Rishe\Infrastructure\WordPress;
 
 final class Capabilities
 {
-    private const VERSION = '2026071902';
+    private const VERSION = '2026071903';
 
     /** @var list<string> */
     private const ALL = [
@@ -17,6 +17,7 @@ final class Capabilities
         'rishe_manage_manufacturing',
         'rishe_manage_sales',
         'rishe_manage_crm',
+        'rishe_manage_treasury',
         'rishe_manage_settings',
     ];
 
