@@ -10,3 +10,4 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 // A future explicit data-erasure command must require a privileged confirmation flow.
 delete_option('rishe_version');
 delete_option('rishe_db_version');
+delete_option('rishe_capabilities_version');
