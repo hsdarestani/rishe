@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Rishe\Tests;
+
 use PHPUnit\Framework\TestCase;
 use Rishe\Infrastructure\Database\Migration;
 use Rishe\Infrastructure\Database\Migrator;
