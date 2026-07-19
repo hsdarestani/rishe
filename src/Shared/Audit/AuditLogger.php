@@ -16,8 +16,7 @@ final class AuditLogger
         string $aggregateId,
         array $payload = [],
         ?string $correlationId = null
-    ): string
-    {
+    ): string {
         global $wpdb;
 
         $eventId = wp_generate_uuid4();
