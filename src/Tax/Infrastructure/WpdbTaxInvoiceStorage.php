@@ -29,10 +29,11 @@ trait WpdbTaxInvoiceStorage
             $salesOrderId
         ), ARRAY_A);
         $order['lines'] = is_array($orderLines) ? array_map(static function (array $line): array {
-            foreach ([
+            $integerFields = [
                 'id', 'order_id', 'product_id', 'quantity_scaled', 'unit_price_irr', 'gross_irr',
                 'line_discount_irr', 'net_irr',
-            ] as $field) {
+            ];
+            foreach ($integerFields as $field) {
                 $line[$field] = (int) $line[$field];
             }
 
