@@ -1,0 +1,30 @@
+{
+  "name": "hsdarestani/rishe",
+  "description": "Modular ERP and omnichannel WordPress plugin for WooCommerce.",
+  "type": "wordpress-plugin",
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.1"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.5",
+    "squizlabs/php_codesniffer": "^3.10"
+  },
+  "autoload": {
+    "psr-4": {
+      "Rishe\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "classmap": [
+      "tests/"
+    ]
+  },
+  "scripts": {
+    "lint": "phpcs -n --standard=phpcs.xml.dist",
+    "test": "phpunit --configuration phpunit.xml.dist"
+  },
+  "config": {
+    "sort-packages": true
+  }
+}
