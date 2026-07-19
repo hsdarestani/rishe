@@ -30,11 +30,15 @@ final class WpdbManufacturingRepository implements ManufacturingRepository
 
         $boms = $wpdb->prefix . 'rishe_boms';
         $version = $data['version'];
+        $latest = $wpdb->get_row($wpdb->prepare(
+            "SELECT id, version, output_product_id FROM {$boms}
+             WHERE code = %s ORDER BY version DESC LIMIT 1 FOR UPDATE",
+            $data['code']
+        ), ARRAY_A);
+        if (is_array($latest) && (int) $latest['output_product_id'] !== (int) $data['output_product_id']) {
+            throw new ManufacturingDomainException('All versions of a BOM code must produce the same product.');
+        }
         if ($version === null) {
-            $latest = $wpdb->get_row($wpdb->prepare(
-                "SELECT id, version FROM {$boms} WHERE code = %s ORDER BY version DESC LIMIT 1 FOR UPDATE",
-                $data['code']
-            ), ARRAY_A);
             $version = is_array($latest) ? ((int) $latest['version'] + 1) : 1;
         }
 
@@ -147,6 +151,7 @@ final class WpdbManufacturingRepository implements ManufacturingRepository
             if ((string) $existing['status'] !== 'completed') {
                 throw new ManufacturingDomainException('Production reference is already in use by an incomplete order.');
             }
+            $this->assertExistingOrderMatches($existing, $data);
 
             return $this->orderResult((int) $existing['id'], true);
         }
@@ -607,6 +612,31 @@ final class WpdbManufacturingRepository implements ManufacturingRepository
         return is_array($row) ? $row : null;
     }
 
+    /** @param array<string, mixed> $existing @param array<string, mixed> $data */
+    private function assertExistingOrderMatches(array $existing, array $data): void
+    {
+        $integerFields = [
+            'bom_id',
+            'input_warehouse_id',
+            'output_warehouse_id',
+            'output_quantity_scaled',
+            'labor_cost_irr',
+            'overhead_cost_irr',
+        ];
+        foreach ($integerFields as $field) {
+            if ((int) $existing[$field] !== (int) $data[$field]) {
+                throw new ManufacturingDomainException('Production reference cannot be reused with different inputs.');
+            }
+        }
+
+        $textFields = ['output_batch_code', 'output_expiry_date'];
+        foreach ($textFields as $field) {
+            if ((string) ($existing[$field] ?? '') !== (string) ($data[$field] ?? '')) {
+                throw new ManufacturingDomainException('Production reference cannot be reused with different inputs.');
+            }
+        }
+    }
+
     /** @return array<string, mixed> */
     private function orderResult(int $orderId, bool $idempotent): array
     {
@@ -641,11 +671,13 @@ final class WpdbManufacturingRepository implements ManufacturingRepository
         ), ARRAY_A);
 
         return array_map(static function (array $row): array {
-            foreach ([
-                'id', 'production_order_id', 'bom_component_id', 'product_id', 'batch_id',
-                'standard_quantity_scaled', 'waste_quantity_scaled', 'total_quantity_scaled',
-                'unit_cost_irr', 'material_cost_irr', 'waste_cost_irr',
-            ] as $field) {
+            foreach (
+                [
+                    'id', 'production_order_id', 'bom_component_id', 'product_id', 'batch_id',
+                    'standard_quantity_scaled', 'waste_quantity_scaled', 'total_quantity_scaled',
+                    'unit_cost_irr', 'material_cost_irr', 'waste_cost_irr',
+                ] as $field
+            ) {
                 $row[$field] = (int) $row[$field];
             }
             $row['standard_quantity'] = Quantity::fromScaled($row['standard_quantity_scaled'], true)->decimal();
@@ -669,10 +701,12 @@ final class WpdbManufacturingRepository implements ManufacturingRepository
         if (!is_array($row)) {
             return null;
         }
-        foreach ([
-            'id', 'production_order_id', 'product_id', 'warehouse_id', 'batch_id',
-            'quantity_scaled', 'unit_cost_irr', 'total_cost_irr',
-        ] as $field) {
+        foreach (
+            [
+                'id', 'production_order_id', 'product_id', 'warehouse_id', 'batch_id',
+                'quantity_scaled', 'unit_cost_irr', 'total_cost_irr',
+            ] as $field
+        ) {
             $row[$field] = (int) $row[$field];
         }
         $row['quantity'] = Quantity::fromScaled($row['quantity_scaled'])->decimal();
@@ -729,10 +763,12 @@ final class WpdbManufacturingRepository implements ManufacturingRepository
     /** @param array<string, mixed> $row @return array<string, mixed> */
     private function formatOrder(array $row): array
     {
-        foreach ([
-            'id', 'bom_id', 'input_warehouse_id', 'output_warehouse_id', 'output_quantity_scaled',
-            'labor_cost_irr', 'overhead_cost_irr', 'created_by',
-        ] as $field) {
+        foreach (
+            [
+                'id', 'bom_id', 'input_warehouse_id', 'output_warehouse_id', 'output_quantity_scaled',
+                'labor_cost_irr', 'overhead_cost_irr', 'created_by',
+            ] as $field
+        ) {
             $row[$field] = (int) $row[$field];
         }
         foreach (['material_cost_irr', 'waste_cost_irr', 'total_cost_irr', 'unit_cost_irr', 'completed_by'] as $field) {
