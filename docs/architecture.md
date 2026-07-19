@@ -6,7 +6,7 @@ Rishe runs inside WordPress but treats WordPress as the runtime, identity provid
 
 - Domain and application code must not call WordPress hooks directly.
 - WordPress and WooCommerce integration belongs under `Infrastructure`.
-- Financial, inventory, and production ledgers are append-only after posting or completion.
+- Financial, inventory, production, sales-payment, and treasury ledgers are append-only after posting or completion.
 - Cross-module side effects use audited application services and, where asynchronous delivery is needed, the outbox table.
 - Every use case that mutates more than one ERP record must execute through the transaction manager.
 
@@ -67,8 +67,19 @@ BOM activation retires an older active version with the same code. Production lo
 
 Customer identity is normalized around a unique Iranian mobile number. Channel orders are idempotent by external order id or explicit idempotency key. Order creation reserves every stock line in the same transaction; payment commits reservations, calculates batch-level COGS, posts accounting when configured, and records immutable payment and loyalty entries.
 
-All table names are prefixed with the active WordPress database prefix. ERP tables are retained during normal plugin uninstall to prevent accidental loss of financial, inventory, production, sales, or CRM records.
+## Treasury tables
+
+- `rishe_treasury_accounts`
+- `rishe_treasury_providers`
+- `rishe_payment_links`
+- `rishe_treasury_transactions`
+- `rishe_reconciliation_matches`
+- `rishe_treasury_settlements`
+
+Payment links are created locally before calling a provider and use the same idempotency reference at the provider boundary. Signed callbacks import an immutable credit transaction, capture a linked sales order, create the reconciliation match, and move the link to its terminal paid state. Bank and gateway transactions, matches, and settlements cannot be edited or deleted.
+
+All table names are prefixed with the active WordPress database prefix. ERP tables are retained during normal plugin uninstall to prevent accidental loss of financial, inventory, production, sales, CRM, or treasury records.
 
 ## Next bounded context
 
-Treasury will introduce bank accounts, payment links, provider callbacks, settlement reconciliation, and automated matching of bank and gateway transactions.
+Procurement and accounts payable will introduce suppliers, purchase orders, landed costs, warehouse receipts, supplier liabilities, and payment workflows.
