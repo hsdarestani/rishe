@@ -9,16 +9,16 @@ use Rishe\Accounting\Domain\Exception\AccountingDomainException;
 use Rishe\Accounting\Domain\Journal\JournalLine;
 use Rishe\Accounting\Domain\Journal\VoucherBalance;
 use Rishe\Accounting\Domain\Journal\VoucherStatus;
-use Rishe\Infrastructure\Database\TransactionManager;
-use Rishe\Shared\Audit\AuditLogger;
+use Rishe\Shared\Audit\AuditRecorder;
+use Rishe\Shared\Database\TransactionRunner;
 use RuntimeException;
 
 final class AccountingService
 {
     public function __construct(
         private readonly AccountingRepository $repository,
-        private readonly TransactionManager $transactions,
-        private readonly AuditLogger $audit
+        private readonly TransactionRunner $transactions,
+        private readonly AuditRecorder $audit
     ) {
     }
 
@@ -26,10 +26,13 @@ final class AccountingService
     public function createAccountGroup(array $data): int
     {
         $payload = $this->accountPayload($data);
-        $id = $this->repository->createAccountGroup($payload);
-        $this->audit->record('accounting.account_group.created', 'account_group', (string) $id, $payload);
 
-        return $id;
+        return $this->transactions->run(function () use ($payload): int {
+            $id = $this->repository->createAccountGroup($payload);
+            $this->audit->record('accounting.account_group.created', 'account_group', (string) $id, $payload);
+
+            return $id;
+        });
     }
 
     /** @param array<string, mixed> $data */
@@ -37,10 +40,13 @@ final class AccountingService
     {
         $payload = $this->accountPayload($data);
         $payload['account_group_id'] = $this->positiveId($data['account_group_id'] ?? null, 'account_group_id');
-        $id = $this->repository->createGeneralLedger($payload);
-        $this->audit->record('accounting.general_ledger.created', 'general_ledger', (string) $id, $payload);
 
-        return $id;
+        return $this->transactions->run(function () use ($payload): int {
+            $id = $this->repository->createGeneralLedger($payload);
+            $this->audit->record('accounting.general_ledger.created', 'general_ledger', (string) $id, $payload);
+
+            return $id;
+        });
     }
 
     /** @param array<string, mixed> $data */
@@ -49,10 +55,13 @@ final class AccountingService
         $payload = $this->accountPayload($data);
         $payload['general_ledger_id'] = $this->positiveId($data['general_ledger_id'] ?? null, 'general_ledger_id');
         $payload['requires_floating_detail'] = (bool) ($data['requires_floating_detail'] ?? false);
-        $id = $this->repository->createSubsidiaryLedger($payload);
-        $this->audit->record('accounting.subsidiary_ledger.created', 'subsidiary_ledger', (string) $id, $payload);
 
-        return $id;
+        return $this->transactions->run(function () use ($payload): int {
+            $id = $this->repository->createSubsidiaryLedger($payload);
+            $this->audit->record('accounting.subsidiary_ledger.created', 'subsidiary_ledger', (string) $id, $payload);
+
+            return $id;
+        });
     }
 
     /** @param array<string, mixed> $data */
@@ -71,10 +80,13 @@ final class AccountingService
             'name' => $this->name($data['name'] ?? null),
             'mobile' => $this->nullableText($data['mobile'] ?? null, 20),
         ];
-        $id = $this->repository->createFloatingDetail($payload);
-        $this->audit->record('accounting.floating_detail.created', 'floating_detail', (string) $id, $payload);
 
-        return $id;
+        return $this->transactions->run(function () use ($payload): int {
+            $id = $this->repository->createFloatingDetail($payload);
+            $this->audit->record('accounting.floating_detail.created', 'floating_detail', (string) $id, $payload);
+
+            return $id;
+        });
     }
 
     /** @return array<string, mixed> */
@@ -96,8 +108,8 @@ final class AccountingService
         $this->assertFiscalYear($fiscalYear);
         $this->assertDate($voucherDate);
         $lines = $this->linesFromPayload($rawLines);
-        $this->assertLedgerAssignments($lines);
         $totals = VoucherBalance::totals($lines);
+        $correlationId = $this->nullableText($correlationId, 64);
 
         return $this->transactions->run(function () use (
             $fiscalYear,
@@ -107,6 +119,7 @@ final class AccountingService
             $totals,
             $correlationId
         ): int {
+            $this->assertLedgerAssignments($lines);
             $voucherId = $this->repository->insertVoucher(
                 $fiscalYear,
                 $voucherDate,
