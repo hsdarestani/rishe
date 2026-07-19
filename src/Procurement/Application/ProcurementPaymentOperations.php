@@ -49,10 +49,11 @@ trait ProcurementPaymentOperations
                 throw new RuntimeException('Purchase order not found.');
             }
             $status = PurchaseOrderStatus::tryFrom((string) $order['status']);
-            if ($status === null || !in_array($status, [
+            $payableStatuses = [
                 PurchaseOrderStatus::PARTIALLY_RECEIVED,
                 PurchaseOrderStatus::RECEIVED,
-            ], true)) {
+            ];
+            if ($status === null || !in_array($status, $payableStatuses, true)) {
                 throw new ProcurementDomainException('Supplier payments require a received purchase order.');
             }
             $outstanding = (int) $order['received_liability_irr'] - (int) $order['paid_irr'];
