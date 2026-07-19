@@ -19,7 +19,7 @@ final class RestApi
         register_rest_route('rishe/v1', '/health', [
             'methods' => 'GET',
             'callback' => [$this, 'health'],
-            'permission_callback' => static fn (): bool => current_user_can('manage_rishe'),
+            'permission_callback' => static fn(): bool => current_user_can('manage_rishe'),
         ]);
     }
 
