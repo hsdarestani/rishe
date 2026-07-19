@@ -6,7 +6,7 @@ Rishe runs inside WordPress but treats WordPress as the runtime, identity provid
 
 - Domain and application code must not call WordPress hooks directly.
 - WordPress and WooCommerce integration belongs under `Infrastructure`.
-- Financial, inventory, production, sales-payment, treasury, and supplier ledgers are append-only after posting or completion.
+- Financial, inventory, production, sales-payment, treasury, supplier, and B2B ledgers are append-only after posting or completion.
 - Cross-module side effects use audited application services and, where asynchronous delivery is needed, the outbox table.
 - Every use case that mutates more than one ERP record must execute through the transaction manager.
 
@@ -92,8 +92,24 @@ Payment links are created locally before calling a provider and use the same ide
 
 Purchase orders are commercially mutable only while draft. Approval allocates an atomic fiscal-year number. Partial receipts prorate line discounts and input tax, allocate actual landed costs by merchandise value or quantity, create fully costed inventory batches, append supplier liability entries, and post accounting when configured. Supplier payments require debit treasury transactions and append both reconciliation and supplier-ledger entries.
 
-All table names are prefixed with the active WordPress database prefix. ERP tables are retained during normal plugin uninstall to prevent accidental loss of financial, inventory, production, sales, CRM, treasury, or procurement records.
+## Consignment and B2B tables
+
+- `rishe_b2b_sequences`
+- `rishe_b2b_accounts`
+- `rishe_consignment_dispatches`
+- `rishe_consignment_dispatch_lines`
+- `rishe_consignment_returns`
+- `rishe_consignment_return_lines`
+- `rishe_agent_sales_reports`
+- `rishe_agent_sales_report_lines`
+- `rishe_consignment_sale_allocations`
+- `rishe_b2b_ledger`
+- `rishe_b2b_settlements`
+
+Consignment dispatches transfer owned inventory to a dedicated partner warehouse without revenue recognition. Returns can consume only unsold dispatch balance. Agent sales reports commit warehouse stock, allocate sold quantities to the oldest open dispatch lines, calculate commission and COGS, enforce credit limits, append receivable charges, and post accounting. Credit treasury transactions settle the B2B ledger through immutable reconciliation and settlement records.
+
+All table names are prefixed with the active WordPress database prefix. ERP tables are retained during normal plugin uninstall to prevent accidental loss of financial, inventory, production, sales, CRM, treasury, procurement, or B2B records.
 
 ## Next bounded context
 
-Consignment and B2B settlement will introduce consignment dispatches, returns, agent sales reports, commissions, credit limits, and settlement workflows.
+Logistics will introduce carrier adapters, shipment labels, tracking events, delivery exceptions, cash-on-delivery reconciliation, and shipping-cost allocation.

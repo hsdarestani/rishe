@@ -49,6 +49,10 @@ Bank, cash, POS, and gateway accounts; configurable providers including Blue Bus
 
 Suppliers, idempotent purchase orders, approval and immutable commercial snapshots, partial warehouse receipts, landed-cost allocation into inventory batches, supplier liabilities, treasury-backed payments, automatic accounting, and supplier statements.
 
-The next milestone is consignment and B2B settlement: consignment dispatches and returns, agent sales reports, commissions, credit limits, and settlement workflows.
+### Consignment and B2B settlement
+
+B2B partner accounts, dedicated consignment warehouses, credit limits, idempotent dispatches and returns, FIFO dispatch allocation, agent sales reports, commission calculation, inventory consumption, receivable ledgers, treasury-backed settlements, and automatic accounting.
+
+The next milestone is logistics integrations: shipments, carrier adapters, labels, tracking events, delivery exceptions, and shipping-cost reconciliation.
 
 See `AGENTS.md` for Codex implementation rules and the documents under `docs/` for module APIs and invariants.
