@@ -85,12 +85,13 @@ final class OperationsServiceTest extends TestCase
         $repository->jobs[(int) $job['id']]['status'] = 'running';
         $repository->jobs[(int) $job['id']]['attempts'] = 1;
         $repository->jobs[(int) $job['id']]['locked_at'] = gmdate('Y-m-d H:i:s', time() - 3600);
+        $scheduler->scheduled = [];
 
         $result = $service->recoverStaleJobs(900);
 
         self::assertSame(1, $result['recovered']);
         self::assertSame('retry_wait', $repository->jobs[(int) $job['id']]['status']);
-        self::assertCount(2, $scheduler->scheduled);
+        self::assertCount(1, $scheduler->scheduled);
     }
 
     private function service(
