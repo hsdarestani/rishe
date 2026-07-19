@@ -12,6 +12,7 @@ use Rishe\Infrastructure\Database\Migrations\CreateManufacturingTables;
 use Rishe\Infrastructure\Database\Migrations\CreateProcurementTables;
 use Rishe\Infrastructure\Database\Migrations\CreateSalesCrmTables;
 use Rishe\Infrastructure\Database\Migrations\CreateTreasuryTables;
+use Rishe\Infrastructure\Database\Migrations\HardenB2BAccountGuard;
 use Rishe\Infrastructure\Database\Migrations\ProtectB2BLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectManufacturingLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectPostedVouchers;
@@ -44,6 +45,7 @@ final class Migrator
             new ProtectProcurementLedger(),
             new CreateB2BTables(),
             new ProtectB2BLedger(),
+            new HardenB2BAccountGuard(),
         ];
     }
 
