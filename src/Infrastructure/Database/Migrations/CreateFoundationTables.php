@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rishe\Infrastructure\Database\Migrations;
 
 use Rishe\Infrastructure\Database\Migration;
+use RuntimeException;
 
 final class CreateFoundationTables implements Migration
 {
@@ -72,5 +73,12 @@ final class CreateFoundationTables implements Migration
             UNIQUE KEY event_id (event_id),
             KEY dispatch_queue (status, available_at)
         ) {$charset};");
+
+        foreach ([$audit, $idempotency, $outbox] as $table) {
+            $found = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+            if ($found !== $table) {
+                throw new RuntimeException("Unable to create required table: {$table}");
+            }
+        }
     }
 }
