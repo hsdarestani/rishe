@@ -9,5 +9,8 @@ phpcs.xml.dist
 composer.lock
 node_modules
 dist
+dist-*
+rishe-*-evidence
+release-evidence*
 .DS_Store
 *.log

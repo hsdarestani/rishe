@@ -27,6 +27,10 @@ jobs:
           coverage: none
           extensions: zip, openssl
           tools: composer:v2
+      - name: Install release tooling
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq rsync zip unzip
       - uses: ramsey/composer-install@v3
       - name: Resolve version
         id: version
@@ -58,7 +62,7 @@ jobs:
         env:
           RELEASE_SIGNING_KEY_PATH: /tmp/rishe-release-private.pem
         run: bash scripts/build-release.sh "${{ steps.version.outputs.version }}" dist
-      - name: Add public key and dependency inventory
+      - name: Verify package, signature and production contents
         shell: bash
         run: |
           version="${{ steps.version.outputs.version }}"
@@ -69,13 +73,19 @@ jobs:
             "dist/rishe-${version}.zip.sha256" \
             "dist/rishe-${version}.zip.sig" \
             "dist/rishe-${version}.pub.pem"
+          bash scripts/package-smoke.sh \
+            "dist/rishe-${version}.zip" \
+            "${version}" \
+            release-evidence
       - uses: actions/upload-artifact@v4
         with:
           name: rishe-${{ steps.version.outputs.version }}
-          path: dist/*
+          path: |
+            dist/*
+            release-evidence/*
           if-no-files-found: error
       - name: Publish GitHub release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" dist/* --verify-tag --generate-notes
+        run: gh release create "${GITHUB_REF_NAME}" dist/* release-evidence/* --verify-tag --generate-notes

@@ -1,0 +1,144 @@
+name: Release Candidate Certification
+
+on:
+  pull_request:
+    paths:
+      - '.distignore'
+      - 'composer.json'
+      - 'composer.lock'
+      - 'rishe.php'
+      - 'src/**'
+      - 'scripts/**'
+      - '.github/workflows/release-candidate.yml'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+          extensions: zip, openssl
+          tools: composer:v2
+      - name: Install release tooling
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq rsync zip unzip
+          composer install --prefer-dist --no-interaction --no-progress
+      - name: Resolve plugin version
+        id: version
+        shell: bash
+        run: |
+          version="$(php -r '$source=file_get_contents("rishe.php"); if (!preg_match("/define\\(\x27RISHE_VERSION\x27, \x27([^\x27]+)\x27\\)/", $source, $matches)) { exit(1); } echo $matches[1];')"
+          test -n "${version}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+      - name: Build and certify ephemeral signed candidate
+        shell: bash
+        run: |
+          set +e
+          bash scripts/release-candidate-smoke.sh dist-candidate rishe-release-evidence 2>&1 | tee release-candidate.log
+          status=${PIPESTATUS[0]}
+          set -e
+          exit "${status}"
+      - name: Upload candidate package and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-candidate-${{ steps.version.outputs.version }}
+          path: |
+            release-candidate.log
+            dist-candidate/*
+            rishe-release-evidence/*
+          if-no-files-found: error
+          retention-days: 14
+
+  install-and-recover:
+    needs: package
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - database: 'mysql:8.0'
+            label: mysql80
+          - database: 'mariadb:10.6'
+            label: mariadb106
+    services:
+      db:
+        image: ${{ matrix.database }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+          extensions: mysqli, zip, openssl
+      - name: Install WordPress tooling
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq default-mysql-client unzip
+          curl -sSLo /tmp/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x /tmp/wp
+          sudo mv /tmp/wp /usr/local/bin/wp
+      - name: Download certified package
+        uses: actions/download-artifact@v4
+        with:
+          name: release-candidate-${{ needs.package.outputs.version }}
+          path: candidate
+      - name: Install packaged plugin on clean WordPress
+        shell: bash
+        run: |
+          wp core download --path=/tmp/wordpress --allow-root --quiet
+          wp config create --path=/tmp/wordpress --dbname=wordpress --dbuser=root --dbpass=root --dbhost=127.0.0.1:3306 --skip-check --allow-root
+          wp config set WP_ENVIRONMENT_TYPE staging --path=/tmp/wordpress --allow-root
+          wp core install --path=/tmp/wordpress --url=http://example.test --title=Rishe --admin_user=admin --admin_password=password --admin_email=admin@example.test --skip-email --allow-root
+          archive="$(find candidate -type f -name 'rishe-${{ needs.package.outputs.version }}.zip' -print -quit)"
+          test -n "${archive}"
+          unzip -q "${archive}" -d /tmp/wordpress/wp-content/plugins
+          test -f /tmp/wordpress/wp-content/plugins/rishe/vendor/autoload.php
+          test ! -L /tmp/wordpress/wp-content/plugins/rishe
+          wp plugin activate rishe --path=/tmp/wordpress --allow-root
+          test "$(wp eval 'echo RISHE_VERSION;' --path=/tmp/wordpress --allow-root)" = "${{ needs.package.outputs.version }}"
+      - name: Packaged runtime smoke
+        run: bash scripts/runtime-smoke.sh /tmp/wordpress
+      - name: Backup and restore rehearsal
+        run: bash scripts/recovery-rehearsal.sh /tmp/wordpress "rishe-recovery-${{ matrix.label }}"
+      - name: Package certification evidence
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p "release-evidence-${{ matrix.label }}"
+          if [[ -d rishe-runtime ]]; then cp -R rishe-runtime "release-evidence-${{ matrix.label }}/runtime"; fi
+          if [[ -d "rishe-recovery-${{ matrix.label }}" ]]; then cp -R "rishe-recovery-${{ matrix.label }}" "release-evidence-${{ matrix.label }}/recovery"; fi
+          wp plugin list --path=/tmp/wordpress --allow-root --format=json > "release-evidence-${{ matrix.label }}/plugins.json" || true
+          wp core version --path=/tmp/wordpress --allow-root > "release-evidence-${{ matrix.label }}/wordpress-version.txt" || true
+          tar -czf "release-evidence-${{ matrix.label }}.tgz" "release-evidence-${{ matrix.label }}"
+      - name: Upload database certification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-evidence-${{ matrix.label }}
+          path: release-evidence-${{ matrix.label }}.tgz
+          if-no-files-found: error
+          retention-days: 14
