@@ -27,5 +27,13 @@ final class PersianAdminLocalization
             RISHE_VERSION,
             true
         );
+
+        wp_enqueue_script(
+            'rishe-persian-admin-extra',
+            RISHE_URL . 'assets/admin/persian-extra.js',
+            ['rishe-persian-admin'],
+            RISHE_VERSION,
+            true
+        );
     }
 }
