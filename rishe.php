@@ -4,7 +4,7 @@
  * Plugin Name: ریشه – مدیریت یکپارچه کسب‌وکار
  * Plugin URI: https://github.com/hsdarestani/rishe
  * Description: سامانه یکپارچه فارسی برای حسابداری، انبار، تولید، فروش، خزانه‌داری، خرید، لجستیک و ووکامرس.
- * Version: 1.5.2
+ * Version: 1.6.0
  * Author: Hossein Darestani
  * Requires at least: 6.5
  * Requires PHP: 8.1
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('RISHE_VERSION', '1.5.2');
+define('RISHE_VERSION', '1.6.0');
 define('RISHE_DB_VERSION', '2026071925');
 define('RISHE_FILE', __FILE__);
 define('RISHE_PATH', plugin_dir_path(__FILE__));
