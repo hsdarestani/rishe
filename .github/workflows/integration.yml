@@ -60,13 +60,22 @@ jobs:
           ln -s "${GITHUB_WORKSPACE}" /tmp/wordpress/wp-content/plugins/rishe
           wp plugin activate rishe --path=/tmp/wordpress --allow-root
       - name: Runtime, migration and backup smoke tests
+        run: bash scripts/runtime-smoke.sh /tmp/wordpress
+      - name: Package runtime diagnostics
+        if: always()
         run: |
-          wp rishe diagnostics --path=/tmp/wordpress --allow-root --format=json
-          wp rishe certify --path=/tmp/wordpress --allow-root --environment=staging --format=json
-          backup_json="$(wp rishe backup create --path=/tmp/wordpress --allow-root --format=json)"
-          archive="$(php -r '$d=json_decode(stream_get_contents(STDIN),true); echo $d["archive"];' <<<"${backup_json}")"
-          wp rishe backup verify "${archive}" --path=/tmp/wordpress --allow-root --format=json
-          wp rishe certify --path=/tmp/wordpress --allow-root --environment=staging --format=json
+          mkdir -p rishe-runtime
+          if [[ ! -f rishe-runtime/summary.log ]]; then
+            echo "Runtime smoke stopped before summary generation." > rishe-runtime/summary.log
+          fi
+          tar -czf "runtime-${{ matrix.label }}.tgz" rishe-runtime
+      - name: Upload runtime diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-${{ matrix.label }}
+          path: runtime-${{ matrix.label }}.tgz
+          if-no-files-found: error
       - name: Concurrent idempotency and worker smoke test
         run: bash scripts/concurrency-smoke.sh /tmp/wordpress
       - name: Package concurrency diagnostics
