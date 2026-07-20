@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Plugin Name: Rishe ERP
+ * Plugin Name: ریشه – مدیریت یکپارچه کسب‌وکار
  * Plugin URI: https://github.com/hsdarestani/rishe
- * Description: Modular ERP and omnichannel operations platform for WooCommerce.
- * Version: 1.5.1
+ * Description: سامانه یکپارچه فارسی برای حسابداری، انبار، تولید، فروش، خزانه‌داری، خرید، لجستیک و ووکامرس.
+ * Version: 1.5.2
  * Author: Hossein Darestani
  * Requires at least: 6.5
  * Requires PHP: 8.1
@@ -17,15 +17,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('RISHE_VERSION', '1.5.1');
+define('RISHE_VERSION', '1.5.2');
 define('RISHE_DB_VERSION', '2026071925');
 define('RISHE_FILE', __FILE__);
 define('RISHE_PATH', plugin_dir_path(__FILE__));
 define('RISHE_URL', plugin_dir_url(__FILE__));
 
 /**
- * Keep this guard free of PHP 8.1-only syntax. It must be able to explain the
- * problem instead of letting Composer or a typed class trigger a white screen.
+ * This guard intentionally avoids PHP 8.1-only syntax so an old host receives
+ * an actionable Persian message instead of a white screen.
  */
 function rishe_environment_failure(string $message): void
 {
@@ -43,13 +43,13 @@ function rishe_environment_failure(string $message): void
             return;
         }
 
-        echo '<div class="notice notice-error"><p><strong>Rishe ERP:</strong> ' . $safeMessage . '</p></div>';
+        echo '<div class="notice notice-error"><p><strong>سامانه ریشه:</strong> ' . $safeMessage . '</p></div>';
     });
 }
 
 if (version_compare(PHP_VERSION, '8.1', '<')) {
     rishe_environment_failure(
-        sprintf('Rishe ERP requires PHP 8.1 or newer. The server is running PHP %s.', PHP_VERSION)
+        sprintf('سامانه ریشه به PHP نسخه ۸.۱ یا جدیدتر نیاز دارد. نسخه فعلی سرور: %s', PHP_VERSION)
     );
 
     return;
@@ -58,7 +58,7 @@ if (version_compare(PHP_VERSION, '8.1', '<')) {
 $autoload = RISHE_PATH . 'vendor/autoload.php';
 if (!is_readable($autoload)) {
     rishe_environment_failure(
-        'Rishe ERP production dependencies are missing. Install the certified release ZIP instead of the repository source archive.'
+        'فایل‌های اجرایی سامانه ریشه کامل نیستند. بسته نصب رسمی افزونه را بارگذاری کنید و از فایل فشرده کد منبع استفاده نکنید.'
     );
 
     return;
@@ -74,18 +74,18 @@ add_action('plugins_loaded', static function (): void {
         (new \Rishe\Plugin())->boot();
         delete_option('rishe_last_runtime_error');
     } catch (\Throwable $exception) {
-        $message = sprintf('%s: %s', $exception::class, $exception->getMessage());
+        $technicalMessage = sprintf('%s: %s', $exception::class, $exception->getMessage());
         update_option('rishe_last_runtime_error', [
-            'message' => $message,
+            'message' => $technicalMessage,
             'occurred_at' => gmdate('c'),
             'plugin_version' => RISHE_VERSION,
             'database_version' => (string) get_option('rishe_db_version', ''),
         ], false);
-        error_log('[Rishe ERP runtime] ' . $message);
-        add_action('admin_notices', static function () use ($message): void {
+        error_log('[Rishe ERP runtime] ' . $technicalMessage);
+        add_action('admin_notices', static function (): void {
             if (current_user_can('activate_plugins')) {
-                echo '<div class="notice notice-error"><p><strong>Rishe ERP runtime error:</strong> ';
-                echo esc_html($message);
+                echo '<div class="notice notice-error"><p><strong>خطای اجرای سامانه ریشه:</strong> ';
+                echo esc_html__('اجرای افزونه با خطا روبه‌رو شد. جزئیات فنی در گزارش خطای سرور و بخش تنظیمات ریشه ثبت شده است.', 'rishe');
                 echo '</p></div>';
             }
         });
