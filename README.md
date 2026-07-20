@@ -34,7 +34,8 @@ composer release:candidate
 - Production certification, WP-CLI operations, verified backups, signed release packages, real MySQL/MariaDB integration tests, protected staging promotion, and rollback-aware deployment automation
 - Release-candidate package installation, production-archive policy checks, and full backup/mutation/restore disaster-recovery rehearsals on MySQL and MariaDB
 - Event-driven business analytics, source/campaign attribution, target management, price history, analytical dimensions, daily facts and snapshots, executive dashboards, and alerts
+- Full WordPress administration workspaces for accounting, inventory, manufacturing, sales/CRM, treasury, procurement, B2B, logistics, tax and settings
 
-Version `1.4.0` introduces the Analytics and Executive Intelligence bounded context. Operational audit events are mirrored into an immutable business-event store and projected into separate reporting tables so executive dashboards do not query financial or inventory ledgers directly. The database version is `2026071924`.
+Version `1.5.0` adds guarded activation diagnostics and a responsive WordPress administration workspace for every implemented ERP module. The database schema remains `2026071924` because this release adds no tables or triggers.
 
 See `AGENTS.md` for implementation rules and the documents under `docs/` for module APIs, deployment requirements, invariants, and the remaining PRD gap plan.
