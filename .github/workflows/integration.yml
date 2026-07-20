@@ -68,7 +68,7 @@ jobs:
           wp rishe backup verify "${archive}" --path=/tmp/wordpress --allow-root --format=json
           wp rishe certify --path=/tmp/wordpress --allow-root --environment=staging --format=json
       - name: Concurrent idempotency and worker smoke test
-        run: scripts/concurrency-smoke.sh /tmp/wordpress
+        run: bash scripts/concurrency-smoke.sh /tmp/wordpress
       - name: Package concurrency diagnostics
         if: always()
         run: |
