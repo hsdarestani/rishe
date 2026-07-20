@@ -57,14 +57,14 @@ jobs:
       - name: Build signed release
         env:
           RELEASE_SIGNING_KEY_PATH: /tmp/rishe-release-private.pem
-        run: scripts/build-release.sh "${{ steps.version.outputs.version }}" dist
+        run: bash scripts/build-release.sh "${{ steps.version.outputs.version }}" dist
       - name: Add public key and dependency inventory
         shell: bash
         run: |
           version="${{ steps.version.outputs.version }}"
           cp /tmp/rishe-release-public.pem "dist/rishe-${version}.pub.pem"
           composer show --locked --format=json > "dist/rishe-${version}.dependencies.json"
-          scripts/verify-release.sh \
+          bash scripts/verify-release.sh \
             "dist/rishe-${version}.zip" \
             "dist/rishe-${version}.zip.sha256" \
             "dist/rishe-${version}.zip.sig" \
