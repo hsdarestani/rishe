@@ -23,6 +23,9 @@ use Rishe\Procurement\Infrastructure\WordPress\ProcurementRestApi;
 use Rishe\Sales\Infrastructure\WordPress\SalesRestApi;
 use Rishe\Tax\Infrastructure\WordPress\TaxRestApi;
 use Rishe\Treasury\Infrastructure\WordPress\TreasuryRestApi;
+use Rishe\WooCommerce\Infrastructure\WordPress\WooCommerceSyncAdminPage;
+use Rishe\WooCommerce\Infrastructure\WordPress\WooCommerceSyncRestApi;
+use Rishe\WooCommerce\Infrastructure\WordPress\WooCommerceSyncRuntime;
 
 final class Plugin
 {
@@ -50,6 +53,9 @@ final class Plugin
         (new AnalyticsRestApi())->register();
         (new OperationsRuntime())->register();
         (new AnalyticsRuntime())->register();
+        (new WooCommerceSyncAdminPage())->register();
+        (new WooCommerceSyncRestApi())->register();
+        (new WooCommerceSyncRuntime())->register();
         (new RisheCliRegistrar())->register();
 
         do_action('rishe/booted', $this);

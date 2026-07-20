@@ -42,7 +42,23 @@ jobs:
           name: phpcs-report-php-${{ matrix.php }}
           path: phpcs-report.txt
       - name: Tests
-        run: composer test
+        id: phpunit
+        shell: bash
+        run: |
+          set +e
+          composer test 2>&1 | tee phpunit-report.txt
+          status=${PIPESTATUS[0]}
+          echo "status=${status}" >> "${GITHUB_OUTPUT}"
+          exit 0
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpunit-report-php-${{ matrix.php }}
+          path: phpunit-report.txt
+      - name: Enforce tests
+        if: steps.phpunit.outputs.status != '0'
+        run: exit 1
       - name: Enforce coding standards
         if: steps.phpcs.outputs.status != '0'
         run: exit 1

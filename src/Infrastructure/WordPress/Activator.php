@@ -7,6 +7,8 @@ namespace Rishe\Infrastructure\WordPress;
 use Rishe\Infrastructure\Database\Migrator;
 use Rishe\Operations\Infrastructure\WordPress\OperationsRuntime;
 use Rishe\Operations\Infrastructure\WpJobScheduler;
+use Rishe\WooCommerce\Application\WooCommerceSyncService;
+use Rishe\WooCommerce\Infrastructure\WordPress\WooCommerceSyncRuntime;
 use RuntimeException;
 
 final class Activator
@@ -26,9 +28,16 @@ final class Activator
         wp_clear_scheduled_hook('rishe/hourly_maintenance');
         wp_clear_scheduled_hook(WpJobScheduler::HOOK);
         wp_clear_scheduled_hook(OperationsRuntime::MAINTENANCE_HOOK);
+        wp_clear_scheduled_hook(WooCommerceSyncService::CRON_HOOK);
+        wp_clear_scheduled_hook(WooCommerceSyncService::ASYNC_STOCK_HOOK);
+        wp_clear_scheduled_hook(WooCommerceSyncRuntime::ORDER_HOOK);
+        wp_clear_scheduled_hook(WooCommerceSyncRuntime::REFUND_HOOK);
         if (function_exists('as_unschedule_all_actions')) {
             as_unschedule_all_actions(WpJobScheduler::HOOK, [], 'rishe-operations');
             as_unschedule_all_actions(OperationsRuntime::MAINTENANCE_HOOK, [], 'rishe-operations');
+            as_unschedule_all_actions(WooCommerceSyncService::ASYNC_STOCK_HOOK, [], 'rishe-woocommerce');
+            as_unschedule_all_actions(WooCommerceSyncRuntime::ORDER_HOOK, [], 'rishe-woocommerce');
+            as_unschedule_all_actions(WooCommerceSyncRuntime::REFUND_HOOK, [], 'rishe-woocommerce');
         }
     }
 
