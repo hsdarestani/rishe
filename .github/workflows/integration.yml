@@ -51,6 +51,12 @@ jobs:
           curl -sSLo /tmp/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
           chmod +x /tmp/wp
           sudo mv /tmp/wp /usr/local/bin/wp
+      - name: Emulate restrictive shared-hosting row format
+        shell: bash
+        run: |
+          mysql -h127.0.0.1 -P3306 -uroot -proot -e "SET GLOBAL innodb_default_row_format='COMPACT';"
+          row_format="$(mysql -h127.0.0.1 -P3306 -uroot -proot -Nse "SELECT @@GLOBAL.innodb_default_row_format")"
+          test "$(printf '%s' "${row_format}" | tr '[:upper:]' '[:lower:]')" = 'compact'
       - name: Install WordPress and Rishe
         run: |
           composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader

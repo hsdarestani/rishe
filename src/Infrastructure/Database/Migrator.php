@@ -30,6 +30,7 @@ use Rishe\Infrastructure\Database\Migrations\ProtectTaxLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectTreasuryLedger;
 use Rishe\Infrastructure\Database\Migrations\ValidateJournalAssignments;
 use RuntimeException;
+use Throwable;
 
 final class Migrator
 {
@@ -76,14 +77,46 @@ final class Migrator
 
     public function migrate(): void
     {
-        $this->ensureMigrationTable();
-        foreach ($this->migrations() as $migration) {
-            if ($this->hasRun($migration->id())) {
+        add_filter('dbdelta_create_queries', [$this, 'useCompatibleInnoDbTableOptions']);
+
+        try {
+            $this->ensureMigrationTable();
+            foreach ($this->migrations() as $migration) {
+                if ($this->hasRun($migration->id())) {
+                    continue;
+                }
+
+                try {
+                    $migration->up();
+                } catch (Throwable $exception) {
+                    throw $this->migrationFailure($migration->id(), $exception);
+                }
+                $this->record($migration->id());
+            }
+        } finally {
+            remove_filter('dbdelta_create_queries', [$this, 'useCompatibleInnoDbTableOptions']);
+        }
+    }
+
+    /**
+     * Shared hosts sometimes retain the legacy COMPACT InnoDB default, whose
+     * 767-byte key limit rejects valid utf8mb4 composite indexes. Make every
+     * dbDelta-created Rishe table explicitly use the modern dynamic row format.
+     *
+     * @param array<string, string> $queries
+     * @return array<string, string>
+     */
+    public function useCompatibleInnoDbTableOptions(array $queries): array
+    {
+        foreach ($queries as $table => $query) {
+            if (stripos($query, 'ROW_FORMAT=') !== false) {
                 continue;
             }
-            $migration->up();
-            $this->record($migration->id());
+
+            $queries[$table] = rtrim(rtrim($query), ';') . ' ENGINE=InnoDB ROW_FORMAT=DYNAMIC;';
         }
+
+        return $queries;
     }
 
     private function ensureMigrationTable(): void
@@ -101,7 +134,7 @@ final class Migrator
         ) {$charset};");
         $found = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table)));
         if ($found !== $table) {
-            throw new RuntimeException('Unable to create the Rishe migrations table.');
+            throw $this->databaseFailure('Unable to create the Rishe migrations table.');
         }
     }
 
@@ -123,7 +156,34 @@ final class Migrator
             ['%s', '%s']
         );
         if ($inserted === false) {
-            throw new RuntimeException('Unable to record Rishe database migration.');
+            throw $this->databaseFailure('Unable to record Rishe database migration.');
         }
+    }
+
+    private function migrationFailure(string $migration, Throwable $exception): RuntimeException
+    {
+        return $this->databaseFailure(
+            sprintf('Migration %s failed: %s', $migration, $exception->getMessage()),
+            $exception
+        );
+    }
+
+    private function databaseFailure(string $message, ?Throwable $previous = null): RuntimeException
+    {
+        global $wpdb;
+
+        $databaseError = trim((string) $wpdb->last_error);
+        if ($databaseError !== '' && !str_contains($message, $databaseError)) {
+            $message .= ' Database error: ' . $databaseError;
+        }
+
+        $server = method_exists($wpdb, 'db_server_info')
+            ? trim((string) $wpdb->db_server_info())
+            : trim((string) $wpdb->get_var('SELECT VERSION()'));
+        if ($server !== '') {
+            $message .= ' Database server: ' . $server . '.';
+        }
+
+        return new RuntimeException($message, 0, $previous);
     }
 }

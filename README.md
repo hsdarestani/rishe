@@ -36,6 +36,6 @@ composer release:candidate
 - Event-driven business analytics, source/campaign attribution, target management, price history, analytical dimensions, daily facts and snapshots, executive dashboards, and alerts
 - Full WordPress administration workspaces for accounting, inventory, manufacturing, sales/CRM, treasury, procurement, B2B, logistics, tax and settings
 
-Version `1.5.0` adds guarded activation diagnostics and a responsive WordPress administration workspace for every implemented ERP module. The database schema remains `2026071924` because this release adds no tables or triggers.
+Version `1.5.1` keeps the complete graphical administration workspace and hardens database installation on shared hosting. Every `dbDelta` table is explicitly created with InnoDB `ROW_FORMAT=DYNAMIC`, and failed migrations now report the underlying database error and server version. The database compatibility version is `2026071925`.
 
 See `AGENTS.md` for implementation rules and the documents under `docs/` for module APIs, deployment requirements, invariants, and the remaining PRD gap plan.
