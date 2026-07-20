@@ -27,10 +27,10 @@ final class ErpAdminPage
             'description' => 'فرمول ساخت، مواد اولیه، ضایعات و دستور تولید',
         ],
         'sales' => [
-            'title' => 'فروش و CRM',
+            'title' => 'فروش و ارتباط با مشتریان',
             'capability' => 'rishe_manage_sales',
             'icon' => 'dashicons-cart',
-            'description' => 'مشتری، قیمت‌گذاری، پروموشن، سفارش و پرداخت',
+            'description' => 'مشتری، قیمت‌گذاری، تخفیف، سفارش و پرداخت',
         ],
         'treasury' => [
             'title' => 'خزانه‌داری',
@@ -45,7 +45,7 @@ final class ErpAdminPage
             'description' => 'تأمین‌کننده، سفارش خرید، رسید و پرداخت',
         ],
         'b2b' => [
-            'title' => 'B2B و امانی',
+            'title' => 'فروش سازمانی و امانی',
             'capability' => 'rishe_manage_b2b',
             'icon' => 'dashicons-groups',
             'description' => 'حساب عامل، ارسال امانی، گزارش فروش، مرجوعی و تسویه',
@@ -103,7 +103,7 @@ final class ErpAdminPage
             'databaseVersion' => (string) get_option('rishe_db_version', ''),
             'siteUrl' => home_url('/'),
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'locale' => get_user_locale(),
+            'locale' => 'fa_IR',
             'currency' => 'IRR',
         ]);
     }
@@ -113,24 +113,24 @@ final class ErpAdminPage
         $module = $this->currentModule();
         $definition = self::MODULES[$module] ?? null;
         if ($definition === null) {
-            wp_die(esc_html__('Unknown Rishe ERP module.', 'rishe'));
+            wp_die(esc_html__('ماژول درخواستی سامانه ریشه پیدا نشد.', 'rishe'));
         }
         if (!current_user_can($definition['capability']) && !current_user_can('manage_rishe')) {
-            wp_die(esc_html__('You do not have permission to access this Rishe ERP module.', 'rishe'));
+            wp_die(esc_html__('شما اجازه دسترسی به این بخش از سامانه ریشه را ندارید.', 'rishe'));
         }
         ?>
-        <div class="wrap rishe-admin" id="rishe-admin-app" dir="rtl">
+        <div class="wrap rishe-admin" id="rishe-admin-app" dir="rtl" lang="fa">
             <header class="rishe-admin__hero">
                 <div class="rishe-admin__hero-copy">
                     <span class="dashicons <?php echo esc_attr($definition['icon']); ?>" aria-hidden="true"></span>
                     <div>
-                        <p class="rishe-admin__eyebrow"><?php echo esc_html__('Rishe ERP workspace', 'rishe'); ?></p>
+                        <p class="rishe-admin__eyebrow"><?php echo esc_html__('محیط کاری سامانه ریشه', 'rishe'); ?></p>
                         <h1><?php echo esc_html($definition['title']); ?></h1>
                         <p><?php echo esc_html($definition['description']); ?></p>
                     </div>
                 </div>
                 <div class="rishe-admin__hero-actions">
-                    <span class="rishe-admin__version">v<?php echo esc_html(RISHE_VERSION); ?></span>
+                    <span class="rishe-admin__version">نسخه <?php echo esc_html(RISHE_VERSION); ?></span>
                     <button type="button" class="button" data-rishe-command="help">
                         <?php echo esc_html__('راهنما', 'rishe'); ?>
                     </button>
@@ -144,7 +144,7 @@ final class ErpAdminPage
             <div class="notice notice-success inline hidden" data-rishe-role="success"><p></p></div>
 
             <div class="rishe-admin__shell">
-                <nav class="rishe-admin__tabs" data-rishe-role="tabs" aria-label="<?php echo esc_attr__('Module sections', 'rishe'); ?>"></nav>
+                <nav class="rishe-admin__tabs" data-rishe-role="tabs" aria-label="<?php echo esc_attr__('بخش‌های ماژول', 'rishe'); ?>"></nav>
                 <main class="rishe-admin__content" data-rishe-role="content">
                     <div class="rishe-admin__loading">
                         <span class="spinner is-active"></span>
@@ -157,7 +157,7 @@ final class ErpAdminPage
                 <form method="dialog" class="rishe-admin__dialog-frame">
                     <header>
                         <h2 data-rishe-role="dialog-title"></h2>
-                        <button value="cancel" class="button-link" aria-label="<?php echo esc_attr__('Close', 'rishe'); ?>">×</button>
+                        <button value="cancel" class="button-link" aria-label="<?php echo esc_attr__('بستن', 'rishe'); ?>">×</button>
                     </header>
                     <div data-rishe-role="dialog-body"></div>
                 </form>

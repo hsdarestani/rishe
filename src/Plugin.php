@@ -12,6 +12,7 @@ use Rishe\Deployment\Infrastructure\WordPress\RisheCliRegistrar;
 use Rishe\Infrastructure\Database\Migrator;
 use Rishe\Infrastructure\WordPress\AdminMenu;
 use Rishe\Infrastructure\WordPress\Capabilities;
+use Rishe\Infrastructure\WordPress\PersianAdminLocalization;
 use Rishe\Infrastructure\WordPress\RestApi;
 use Rishe\Inventory\Infrastructure\WordPress\InventoryRestApi;
 use Rishe\Logistics\Infrastructure\WordPress\LogisticsRestApi;
@@ -34,6 +35,7 @@ final class Plugin
         Capabilities::maybeGrant();
 
         (new AdminMenu())->register();
+        (new PersianAdminLocalization())->register();
         (new RestApi())->register();
         (new AccountingRestApi())->register();
         (new InventoryRestApi())->register();

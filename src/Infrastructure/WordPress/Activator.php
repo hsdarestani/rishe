@@ -38,13 +38,13 @@ final class Activator
 
         if (version_compare(PHP_VERSION, '8.1', '<')) {
             throw new RuntimeException(
-                sprintf('Rishe ERP requires PHP 8.1 or newer; the server is running PHP %s.', PHP_VERSION)
+                sprintf('سامانه ریشه به PHP نسخه ۸.۱ یا جدیدتر نیاز دارد. نسخه فعلی سرور: %s', PHP_VERSION)
             );
         }
 
         if (version_compare((string) $wp_version, '6.5', '<')) {
             throw new RuntimeException(
-                sprintf('Rishe ERP requires WordPress 6.5 or newer; the site is running WordPress %s.', $wp_version)
+                sprintf('سامانه ریشه به وردپرس نسخه ۶.۵ یا جدیدتر نیاز دارد. نسخه فعلی وردپرس: %s', $wp_version)
             );
         }
 
@@ -58,7 +58,7 @@ final class Activator
         if (version_compare($version, $minimum, '<')) {
             throw new RuntimeException(
                 sprintf(
-                    'Rishe ERP requires MySQL 8.0+ or MariaDB 10.6+. The server reports %s %s.',
+                    'سامانه ریشه به MySQL نسخه ۸ یا MariaDB نسخه ۱۰.۶ و جدیدتر نیاز دارد. پایگاه‌داده فعلی: %s %s',
                     $engine,
                     $version
                 )
@@ -66,12 +66,14 @@ final class Activator
         }
 
         if (!extension_loaded('openssl')) {
-            throw new RuntimeException('The PHP OpenSSL extension is required for encrypted credentials and tax signatures.');
+            throw new RuntimeException(
+                'افزونه OpenSSL در PHP باید فعال باشد تا اطلاعات دسترسی و امضای صورتحساب‌ها به‌صورت امن پردازش شوند.'
+            );
         }
 
         $probe = $wpdb->get_var('SELECT 1');
         if ((string) $probe !== '1') {
-            throw new RuntimeException('WordPress could not execute a database health query.');
+            throw new RuntimeException('وردپرس نتوانست آزمون سلامت پایگاه‌داده را اجرا کند.');
         }
     }
 }

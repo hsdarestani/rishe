@@ -34,8 +34,8 @@ final class AdminMenu
     public function addMenu(): void
     {
         add_menu_page(
-            __('Rishe ERP', 'rishe'),
-            __('Rishe ERP', 'rishe'),
+            __('سامانه ریشه', 'rishe'),
+            __('سامانه ریشه', 'rishe'),
             'manage_rishe',
             'rishe',
             [$this->operations, 'render'],
@@ -45,7 +45,7 @@ final class AdminMenu
 
         add_submenu_page(
             'rishe',
-            __('Operations', 'rishe'),
+            __('مرکز عملیات', 'rishe'),
             __('مرکز عملیات', 'rishe'),
             'rishe_manage_operations',
             'rishe-operations',
@@ -65,7 +65,7 @@ final class AdminMenu
 
         add_submenu_page(
             'rishe',
-            __('Analytics', 'rishe'),
+            __('تحلیل و داشبورد', 'rishe'),
             __('تحلیل و داشبورد', 'rishe'),
             'rishe_view_reports',
             'rishe-analytics',
