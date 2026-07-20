@@ -7,6 +7,12 @@ on:
     paths:
       - '.im-payload/**'
       - '.github/workflows/apply-inventory-manufacturing-completion.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.im-payload/**'
+      - '.github/workflows/apply-inventory-manufacturing-completion.yml'
 
 permissions:
   contents: write
@@ -142,7 +148,7 @@ jobs:
           readme = Path('README.md')
           source = readme.read_text()
           marker = '- Manufacturing, BOM, waste, labor, overhead, and finished-goods costing\n'
-          if marker in source and 'FEFO batch allocation' not in source:
+          if marker in source and 'FEFO allocation' not in source:
               source = source.replace(marker, marker + '- FEFO batch allocation, reservation expiry, joint multi-output BOMs, by-products, and zero-cost waste\n')
           source = source.replace('Version `1.4.0`', 'Version `1.5.0`')
           readme.write_text(source)
