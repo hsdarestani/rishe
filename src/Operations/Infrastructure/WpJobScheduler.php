@@ -18,6 +18,23 @@ final class WpJobScheduler implements JobScheduler
         $timestamp = max(time() + 1, (int) strtotime($scheduledAt));
         $args = [$jobId];
         if (function_exists('as_schedule_single_action')) {
+            $this->scheduleActionScheduler($timestamp, $args);
+
+            return;
+        }
+
+        $this->scheduleWpCron($timestamp, $args);
+    }
+
+    public function backend(): string
+    {
+        return function_exists('as_schedule_single_action') ? 'action_scheduler' : 'wp_cron';
+    }
+
+    /** @param list<int> $args */
+    private function scheduleActionScheduler(int $timestamp, array $args): void
+    {
+        for ($attempt = 1; $attempt <= 3; ++$attempt) {
             if ($this->hasActionSchedulerJob($args)) {
                 return;
             }
@@ -28,28 +45,33 @@ final class WpJobScheduler implements JobScheduler
             if ($this->hasActionSchedulerJob($args)) {
                 return;
             }
-            throw new RuntimeException('Action Scheduler could not enqueue the operation job.');
+            usleep($attempt * 50000);
         }
 
-        if (wp_next_scheduled(self::HOOK, $args) !== false) {
-            return;
-        }
-        $result = wp_schedule_single_event($timestamp, self::HOOK, $args, true);
-        if ($result === true) {
-            return;
-        }
-        if ($result instanceof WP_Error && $result->get_error_code() === 'duplicate_event') {
-            return;
-        }
-        if (wp_next_scheduled(self::HOOK, $args) !== false) {
-            return;
-        }
-        throw new RuntimeException('WordPress Cron could not enqueue the operation job.');
+        throw new RuntimeException('Action Scheduler could not enqueue the operation job.');
     }
 
-    public function backend(): string
+    /** @param list<int> $args */
+    private function scheduleWpCron(int $timestamp, array $args): void
     {
-        return function_exists('as_schedule_single_action') ? 'action_scheduler' : 'wp_cron';
+        for ($attempt = 1; $attempt <= 4; ++$attempt) {
+            if ($this->hasWpCronJob($args)) {
+                return;
+            }
+            $result = wp_schedule_single_event($timestamp, self::HOOK, $args, true);
+            if ($result === true) {
+                return;
+            }
+            if ($result instanceof WP_Error && $result->get_error_code() === 'duplicate_event') {
+                return;
+            }
+            if ($this->hasWpCronJob($args, true)) {
+                return;
+            }
+            usleep($attempt * 75000);
+        }
+
+        throw new RuntimeException('WordPress Cron could not enqueue the operation job.');
     }
 
     /** @param list<int> $args */
@@ -63,5 +85,15 @@ final class WpJobScheduler implements JobScheduler
         }
 
         return false;
+    }
+
+    /** @param list<int> $args */
+    private function hasWpCronJob(array $args, bool $refresh = false): bool
+    {
+        if ($refresh) {
+            wp_cache_delete('cron', 'options');
+        }
+
+        return wp_next_scheduled(self::HOOK, $args) !== false;
     }
 }
