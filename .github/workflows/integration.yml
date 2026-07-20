@@ -52,13 +52,20 @@ jobs:
           chmod +x /tmp/wp
           sudo mv /tmp/wp /usr/local/bin/wp
       - name: Install WordPress and Rishe
+        shell: bash
         run: |
           composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
           wp core download --path=/tmp/wordpress --allow-root --quiet
           wp config create --path=/tmp/wordpress --dbname=wordpress --dbuser=root --dbpass=root --dbhost=127.0.0.1:3306 --skip-check --allow-root
           wp core install --path=/tmp/wordpress --url=http://example.test --title=Rishe --admin_user=admin --admin_password=password --admin_email=admin@example.test --skip-email --allow-root
           ln -s "${GITHUB_WORKSPACE}" /tmp/wordpress/wp-content/plugins/rishe
-          wp plugin activate rishe --path=/tmp/wordpress --allow-root
+          mkdir -p rishe-runtime
+          set +e
+          wp plugin activate rishe --path=/tmp/wordpress --allow-root --debug >rishe-runtime/activation.log 2>&1
+          status=$?
+          set -e
+          cat rishe-runtime/activation.log
+          exit "${status}"
       - name: Runtime, migration and backup smoke tests
         run: bash scripts/runtime-smoke.sh /tmp/wordpress
       - name: Package runtime diagnostics
