@@ -21,6 +21,11 @@ if ! grep -q "define('RISHE_VERSION', '${VERSION}')" "${ROOT}/rishe.php"; then
   echo "RISHE_VERSION does not match ${VERSION}" >&2
   exit 1
 fi
+if [[ ! -r "${ROOT}/composer.lock" ]]; then
+  echo "composer.lock is required before building a release. Run composer install first." >&2
+  exit 1
+fi
+LOCK_SHA256="$(sha256sum "${ROOT}/composer.lock" | awk '{print $1}')"
 
 BUILD_DIR="$(mktemp -d)"
 trap 'rm -rf "${BUILD_DIR}"' EXIT
@@ -28,10 +33,12 @@ PLUGIN_DIR="${BUILD_DIR}/rishe"
 mkdir -p "${PLUGIN_DIR}" "${ROOT}/${OUTPUT_DIR}"
 
 rsync -a --delete --exclude-from="${ROOT}/.distignore" "${ROOT}/" "${PLUGIN_DIR}/"
+cp "${ROOT}/composer.lock" "${PLUGIN_DIR}/composer.lock"
 (
   cd "${PLUGIN_DIR}"
-  composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+  composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader --classmap-authoritative
   find . -path './vendor' -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l >/dev/null
+  rm -f composer.lock
 )
 
 ARCHIVE="${ROOT}/${OUTPUT_DIR}/rishe-${VERSION}.zip"
@@ -52,6 +59,7 @@ cat > "${ARCHIVE}.manifest.json" <<JSON
   "version": "${VERSION}",
   "sha256": "${SHA256}",
   "size_bytes": ${SIZE},
+  "composer_lock_sha256": "${LOCK_SHA256}",
   "built_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "source_commit": "${GITHUB_SHA:-unknown}"
 }
