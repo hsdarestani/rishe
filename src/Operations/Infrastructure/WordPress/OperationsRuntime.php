@@ -52,7 +52,7 @@ final class OperationsRuntime
     {
         $schedules['rishe_five_minutes'] = [
             'interval' => 300,
-            'display' => __('Every five minutes (Rishe ERP)', 'rishe'),
+            'display' => __('هر پنج دقیقه یک‌بار (سامانه ریشه)', 'rishe'),
         ];
 
         return $schedules;
