@@ -283,9 +283,9 @@ final class CreateAnalyticsTables implements Migration
             year_number smallint(5) unsigned NOT NULL,
             month_key char(7) NOT NULL,
             PRIMARY KEY  (date_key),
-            KEY year_month (year_number, month_number),
-            KEY quarter (year_number, quarter_number),
-            KEY month_key (month_key)
+            KEY idx_year_month (year_number, month_number),
+            KEY idx_year_quarter (year_number, quarter_number),
+            KEY idx_month_key (month_key)
         ) {$charset};");
 
         dbDelta("CREATE TABLE {$snapshots} (
