@@ -42,12 +42,20 @@ jobs:
           test -n "${version}"
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
       - name: Build and certify ephemeral signed candidate
-        run: bash scripts/release-candidate-smoke.sh dist-candidate rishe-release-evidence
-      - name: Upload candidate package
+        shell: bash
+        run: |
+          set +e
+          bash scripts/release-candidate-smoke.sh dist-candidate rishe-release-evidence 2>&1 | tee release-candidate.log
+          status=${PIPESTATUS[0]}
+          set -e
+          exit "${status}"
+      - name: Upload candidate package and diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: release-candidate-${{ steps.version.outputs.version }}
           path: |
+            release-candidate.log
             dist-candidate/*
             rishe-release-evidence/*
           if-no-files-found: error
