@@ -19,6 +19,7 @@ final class ConfigurationManager
         'rishe_b2b_accounting_mapping',
         'rishe_logistics_accounting_mapping',
         'rishe_woocommerce_warehouse_id',
+        'rishe_woocommerce_sync',
         'rishe_system_user_id',
     ];
 
