@@ -29,6 +29,8 @@ Projection uses a monotonic cursor and short database transactions. It maintains
 - daily facts by event and business dimensions
 - daily inventory/SKU snapshots
 
+Time-dimension indexes use explicit non-reserved identifiers so migrations remain portable across MySQL 8.0 and MariaDB 10.6.
+
 Product line, category, supplier, and alert thresholds can be configured with:
 
 - `rishe_product_analytics_dimensions`
