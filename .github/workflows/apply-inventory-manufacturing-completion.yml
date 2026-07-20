@@ -1,0 +1,180 @@
+name: Apply Inventory Manufacturing Completion
+
+on:
+  push:
+    branches:
+      - agent/inventory-manufacturing-completion
+    paths:
+      - '.im-payload/**'
+      - '.github/workflows/apply-inventory-manufacturing-completion.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/inventory-manufacturing-completion
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+          tools: composer:v2
+      - uses: ramsey/composer-install@v3
+      - name: Extract bounded context and patch integrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .im-payload/part-* | base64 -d > /tmp/im-completion.tgz
+          tar -xzf /tmp/im-completion.tgz -C .
+          python <<'PY'
+          from pathlib import Path
+
+          def replace(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              source = file.read_text()
+              if old not in source:
+                  raise SystemExit(f'Expected text not found in {path}: {old[:80]!r}')
+              file.write_text(source.replace(old, new, 1))
+
+          inventory_service = 'src/Inventory/Application/InventoryService.php'
+          replace(inventory_service, "strtolower(trim((string) ($data['inventory_method'] ?? 'fifo')))", "strtolower(trim((string) ($data['inventory_method'] ?? 'fefo')))")
+          replace(inventory_service, "if (!in_array($method, ['fifo', 'lifo'], true)) {\n            throw new InventoryDomainException('Inventory method must be fifo or lifo.');", "if (!in_array($method, ['fefo', 'fifo', 'lifo'], true)) {\n            throw new InventoryDomainException('Inventory method must be fefo, fifo, or lifo.');")
+          replace(inventory_service, "    private function nullableDateTime(mixed $value): ?string\n    {\n        if ($value === null || $value === '') {\n            return null;\n        }\n\n        return $this->dateTime($value, 'expires_at');\n    }", "    private function nullableDateTime(mixed $value): ?string\n    {\n        if ($value === null || $value === '') {\n            return gmdate('Y-m-d H:i:s', time() + 900);\n        }\n\n        return $this->dateTime($value, 'expires_at');\n    }")
+
+          repo = 'src/Inventory/Infrastructure/WpdbInventoryRepository.php'
+          replace(repo, 'use Rishe\\Inventory\\Domain\\FifoAllocator;\n', 'use Rishe\\Inventory\\Domain\\BatchSelectionPolicy;\nuse Rishe\\Inventory\\Domain\\FifoAllocator;\n')
+          replace(repo, "    public function __construct(FifoAllocator $allocator)\n    {\n        $this->mutations = new WpdbStockMutationGateway($allocator);\n    }", "    public function __construct(FifoAllocator $allocator, ?BatchSelectionPolicy $selection = null)\n    {\n        $this->mutations = new WpdbStockMutationGateway(\n            $allocator,\n            $selection ?? new BatchSelectionPolicy()\n        );\n    }")
+
+          gateway = 'src/Inventory/Infrastructure/WpdbStockMutationGateway.php'
+          replace(gateway, 'use Rishe\\Inventory\\Domain\\Exception\\InventoryDomainException;\n', 'use Rishe\\Inventory\\Domain\\BatchSelectionPolicy;\nuse Rishe\\Inventory\\Domain\\Exception\\InventoryDomainException;\n')
+          replace(gateway, "final class WpdbStockMutationGateway\n{\n    public function __construct(private readonly FifoAllocator $allocator)\n    {\n    }", "final class WpdbStockMutationGateway\n{\n    private readonly BatchSelectionPolicy $selection;\n\n    public function __construct(\n        private readonly FifoAllocator $allocator,\n        ?BatchSelectionPolicy $selection = null\n    ) {\n        $this->selection = $selection ?? new BatchSelectionPolicy();\n    }")
+          source = Path(gateway).read_text()
+          start = source.index('    /** @return list<array{id: int, available_scaled: int, unit_cost_irr: int, batch_code: string}> */\n    private function lockBatches')
+          end = source.index('\n    /** @return array<string, mixed> */\n    private function reservation', start)
+          method = '''    /** @return list<array{id: int, available_scaled: int, unit_cost_irr: int, batch_code: string}> */
+    private function lockBatches(int $productId, int $warehouseId, string $method): array
+    {
+        global $wpdb;
+
+        $batches = $wpdb->prefix . 'rishe_inventory_batches';
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT id, batch_code, unit_cost_irr, expiry_date, received_at,
+                    (quantity_on_hand - quantity_reserved) AS available_scaled
+             FROM {$batches}
+             WHERE product_id = %d AND warehouse_id = %d AND status = 'active'
+               AND quantity_on_hand > quantity_reserved
+               AND (expiry_date IS NULL OR expiry_date >= %s)
+             ORDER BY id FOR UPDATE",
+            $productId,
+            $warehouseId,
+            current_time('Y-m-d')
+        ), ARRAY_A);
+        $sorted = $this->selection->sort(is_array($rows) ? $rows : [], $method);
+
+        return array_map(static fn (array $row): array => [
+            'id' => (int) $row['id'],
+            'available_scaled' => (int) $row['available_scaled'],
+            'unit_cost_irr' => (int) $row['unit_cost_irr'],
+            'batch_code' => (string) $row['batch_code'],
+        ], $sorted);
+    }
+'''
+          Path(gateway).write_text(source[:start] + method + source[end:])
+
+          manufacturing_repo = 'src/Manufacturing/Infrastructure/WpdbManufacturingRepository.php'
+          replace(manufacturing_repo, 'use Rishe\\Inventory\\Domain\\FifoAllocator;\n', 'use Rishe\\Inventory\\Domain\\BatchSelectionPolicy;\nuse Rishe\\Inventory\\Domain\\FifoAllocator;\n')
+          replace(manufacturing_repo, "final class WpdbManufacturingRepository implements ManufacturingRepository\n{\n    public function __construct(\n        private readonly FifoAllocator $allocator,\n        private readonly ProductionCostCalculator $costs\n    ) {\n    }", "final class WpdbManufacturingRepository implements ManufacturingRepository\n{\n    private readonly BatchSelectionPolicy $selection;\n\n    public function __construct(\n        private readonly FifoAllocator $allocator,\n        private readonly ProductionCostCalculator $costs,\n        ?BatchSelectionPolicy $selection = null\n    ) {\n        $this->selection = $selection ?? new BatchSelectionPolicy();\n    }")
+          source = Path(manufacturing_repo).read_text()
+          start = source.index('    /** @return list<array{id: int, available_scaled: int, unit_cost_irr: int, batch_code: string}> */\n    private function lockBatches')
+          end = source.index('\n    private function assertProductActive', start)
+          method = '''    /** @return list<array{id: int, available_scaled: int, unit_cost_irr: int, batch_code: string}> */
+    private function lockBatches(int $productId, int $warehouseId, string $method): array
+    {
+        global $wpdb;
+
+        $table = $wpdb->prefix . 'rishe_inventory_batches';
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT id, batch_code, unit_cost_irr, expiry_date, received_at,
+                    (quantity_on_hand - quantity_reserved) AS available_scaled
+             FROM {$table}
+             WHERE product_id = %d AND warehouse_id = %d AND status = 'active'
+               AND quantity_on_hand > quantity_reserved
+               AND (expiry_date IS NULL OR expiry_date >= %s)
+             ORDER BY id FOR UPDATE",
+            $productId,
+            $warehouseId,
+            current_time('Y-m-d')
+        ), ARRAY_A);
+        $sorted = $this->selection->sort(is_array($rows) ? $rows : [], $method);
+
+        return array_map(static fn (array $row): array => [
+            'id' => (int) $row['id'],
+            'available_scaled' => (int) $row['available_scaled'],
+            'unit_cost_irr' => (int) $row['unit_cost_irr'],
+            'batch_code' => (string) $row['batch_code'],
+        ], $sorted);
+    }
+'''
+          Path(manufacturing_repo).write_text(source[:start] + method + source[end:])
+
+          plugin = 'src/Plugin.php'
+          replace(plugin, 'use Rishe\\Inventory\\Infrastructure\\WordPress\\InventoryRestApi;\n', 'use Rishe\\Inventory\\Infrastructure\\WordPress\\InventoryCompletionRestApi;\nuse Rishe\\Inventory\\Infrastructure\\WordPress\\InventoryRestApi;\nuse Rishe\\Inventory\\Infrastructure\\WordPress\\InventoryRuntime;\n')
+          replace(plugin, 'use Rishe\\Manufacturing\\Infrastructure\\WordPress\\ManufacturingRestApi;\n', 'use Rishe\\Manufacturing\\Infrastructure\\WordPress\\ManufacturingCompletionRestApi;\nuse Rishe\\Manufacturing\\Infrastructure\\WordPress\\ManufacturingRestApi;\n')
+          replace(plugin, '        (new InventoryRestApi())->register();\n        (new ManufacturingRestApi())->register();', '        (new InventoryRestApi())->register();\n        (new InventoryCompletionRestApi())->register();\n        (new ManufacturingRestApi())->register();\n        (new ManufacturingCompletionRestApi())->register();')
+          replace(plugin, '        (new OperationsRuntime())->register();\n        (new AnalyticsRuntime())->register();', '        (new OperationsRuntime())->register();\n        (new AnalyticsRuntime())->register();\n        (new InventoryRuntime())->register();')
+
+          migrator = 'src/Infrastructure/Database/Migrator.php'
+          replace(migrator, 'use Rishe\\Infrastructure\\Database\\Migrations\\CreateInventoryTables;\n', 'use Rishe\\Infrastructure\\Database\\Migrations\\CreateInventoryManufacturingCompletion;\nuse Rishe\\Infrastructure\\Database\\Migrations\\CreateInventoryTables;\n')
+          replace(migrator, 'use Rishe\\Infrastructure\\Database\\Migrations\\ProtectManufacturingLedger;\n', 'use Rishe\\Infrastructure\\Database\\Migrations\\ProtectInventoryManufacturingCompletion;\nuse Rishe\\Infrastructure\\Database\\Migrations\\ProtectManufacturingLedger;\n')
+          replace(migrator, '            new ProtectAnalyticsLedger(),\n', '            new ProtectAnalyticsLedger(),\n            new CreateInventoryManufacturingCompletion(),\n            new ProtectInventoryManufacturingCompletion(),\n')
+
+          bootstrap = 'rishe.php'
+          replace(bootstrap, ' * Version: 1.4.0', ' * Version: 1.5.0')
+          replace(bootstrap, "define('RISHE_VERSION', '1.4.0');", "define('RISHE_VERSION', '1.5.0');")
+          replace(bootstrap, "define('RISHE_DB_VERSION', '2026071924');", "define('RISHE_DB_VERSION', '2026071926');")
+
+          readme = Path('README.md')
+          source = readme.read_text()
+          marker = '- Manufacturing, BOM, waste, labor, overhead, and finished-goods costing\n'
+          if marker in source and 'FEFO batch allocation' not in source:
+              source = source.replace(marker, marker + '- FEFO batch allocation, reservation expiry, joint multi-output BOMs, by-products, and zero-cost waste\n')
+          source = source.replace('Version `1.4.0`', 'Version `1.5.0`')
+          readme.write_text(source)
+
+          gaps = Path('docs/prd-gap-analysis.md')
+          if gaps.exists():
+              source = gaps.read_text()
+              source += '''
+
+## Closed in 1.5.0
+
+- FEFO batch allocation with FIFO tie-breaking and explicit FIFO/LIFO overrides.
+- Default reservation TTL and audited automatic release of expired allocations.
+- Multi-output BOMs with main products, by-products, zero-cost waste, and exact joint-cost allocation.
+'''
+              gaps.write_text(source)
+          PY
+          rm -rf .im-payload .github/workflows/apply-inventory-manufacturing-completion.yml
+      - name: Format and validate generated change
+        shell: bash
+        run: |
+          set -euo pipefail
+          vendor/bin/phpcbf -n --standard=phpcs.xml.dist src tests || true
+          find src tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+          vendor/bin/phpcs -n --standard=phpcs.xml.dist src tests
+          composer test
+      - name: Commit bounded context
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m 'Complete FEFO, reservation expiry and joint production'
+          git push origin HEAD:agent/inventory-manufacturing-completion
