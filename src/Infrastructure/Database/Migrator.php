@@ -134,7 +134,7 @@ final class Migrator
         ) {$charset};");
         $found = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table)));
         if ($found !== $table) {
-            throw $this->databaseFailure('Unable to create the Rishe migrations table.');
+            throw $this->databaseFailure('جدول ثبت به‌روزرسانی‌های پایگاه‌داده ساخته نشد.');
         }
     }
 
@@ -156,14 +156,14 @@ final class Migrator
             ['%s', '%s']
         );
         if ($inserted === false) {
-            throw $this->databaseFailure('Unable to record Rishe database migration.');
+            throw $this->databaseFailure('ثبت نتیجه به‌روزرسانی پایگاه‌داده انجام نشد.');
         }
     }
 
     private function migrationFailure(string $migration, Throwable $exception): RuntimeException
     {
         return $this->databaseFailure(
-            sprintf('Migration %s failed: %s', $migration, $exception->getMessage()),
+            sprintf('اجرای به‌روزرسانی پایگاه‌داده با شناسه %s ناموفق بود: %s', $migration, $exception->getMessage()),
             $exception
         );
     }
@@ -174,14 +174,14 @@ final class Migrator
 
         $databaseError = trim((string) $wpdb->last_error);
         if ($databaseError !== '' && !str_contains($message, $databaseError)) {
-            $message .= ' Database error: ' . $databaseError;
+            $message .= ' خطای پایگاه‌داده: ' . $databaseError;
         }
 
         $server = method_exists($wpdb, 'db_server_info')
             ? trim((string) $wpdb->db_server_info())
             : trim((string) $wpdb->get_var('SELECT VERSION()'));
         if ($server !== '') {
-            $message .= ' Database server: ' . $server . '.';
+            $message .= ' نسخه سرور پایگاه‌داده: ' . $server . '.';
         }
 
         return new RuntimeException($message, 0, $previous);
