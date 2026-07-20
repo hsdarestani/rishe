@@ -27,6 +27,8 @@ final class AuditLogger implements AuditRecorder
             throw new RuntimeException('Unable to encode audit payload.', 0, $exception);
         }
 
+        $occurredAt = current_time('mysql', true);
+        $actorUserId = get_current_user_id() ?: null;
         $inserted = $wpdb->insert(
             $wpdb->prefix . 'rishe_audit_log',
             [
@@ -34,10 +36,10 @@ final class AuditLogger implements AuditRecorder
                 'event_type' => $eventType,
                 'aggregate_type' => $aggregateType,
                 'aggregate_id' => $aggregateId,
-                'actor_user_id' => get_current_user_id() ?: null,
+                'actor_user_id' => $actorUserId,
                 'correlation_id' => $correlationId,
                 'payload_json' => $payloadJson,
-                'created_at' => current_time('mysql', true),
+                'created_at' => $occurredAt,
             ],
             ['%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s']
         );
@@ -45,6 +47,17 @@ final class AuditLogger implements AuditRecorder
         if ($inserted === false) {
             throw new RuntimeException('Unable to write audit log event.');
         }
+
+        do_action('rishe/audit_recorded', [
+            'event_id' => $eventId,
+            'event_type' => $eventType,
+            'aggregate_type' => $aggregateType,
+            'aggregate_id' => $aggregateId,
+            'actor_user_id' => $actorUserId,
+            'correlation_id' => $correlationId,
+            'payload' => $payload,
+            'occurred_at' => $occurredAt,
+        ]);
 
         return $eventId;
     }

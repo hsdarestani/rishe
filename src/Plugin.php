@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Rishe;
 
 use Rishe\Accounting\Infrastructure\WordPress\AccountingRestApi;
+use Rishe\Analytics\Infrastructure\WordPress\AnalyticsRestApi;
+use Rishe\Analytics\Infrastructure\WordPress\AnalyticsRuntime;
 use Rishe\B2B\Infrastructure\WordPress\B2BRestApi;
 use Rishe\Deployment\Infrastructure\WordPress\RisheCliRegistrar;
 use Rishe\Infrastructure\Database\Migrator;
@@ -43,7 +45,9 @@ final class Plugin
         (new LogisticsRestApi())->register();
         (new TaxRestApi())->register();
         (new OperationsRestApi())->register();
+        (new AnalyticsRestApi())->register();
         (new OperationsRuntime())->register();
+        (new AnalyticsRuntime())->register();
         (new RisheCliRegistrar())->register();
 
         do_action('rishe/booted', $this);

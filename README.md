@@ -33,9 +33,8 @@ composer release:candidate
 - Administration UX, durable jobs, retries, incidents, diagnostics, and safe configuration portability
 - Production certification, WP-CLI operations, verified backups, signed release packages, real MySQL/MariaDB integration tests, protected staging promotion, and rollback-aware deployment automation
 - Release-candidate package installation, production-archive policy checks, and full backup/mutation/restore disaster-recovery rehearsals on MySQL and MariaDB
+- Event-driven business analytics, source/campaign attribution, target management, price history, analytical dimensions, daily facts and snapshots, executive dashboards, and alerts
 
-Version `1.3.0` certifies the exact production ZIP rather than only the source checkout and produces machine-readable evidence that WordPress data and immutable ERP jobs survive a real backup/restore round trip. The database version remains unchanged because this delivery adds no schema migration.
+Version `1.4.0` introduces the Analytics and Executive Intelligence bounded context. Operational audit events are mirrored into an immutable business-event store and projected into separate reporting tables so executive dashboards do not query financial or inventory ledgers directly. The database version is `2026071924`.
 
-Provider credentials, provider contracts, the production signing key, and a real staging host still require account-specific configuration before live traffic is enabled.
-
-See `AGENTS.md` for implementation rules and the documents under `docs/` for module APIs, deployment requirements, and invariants.
+See `AGENTS.md` for implementation rules and the documents under `docs/` for module APIs, deployment requirements, invariants, and the remaining PRD gap plan.
