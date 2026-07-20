@@ -14,11 +14,11 @@ trait OperationsEnqueueOperations
         if ($actorUserId < 1) {
             throw new OperationsDomainException('Operation job requires an authenticated actor.');
         }
-        $jobType = strtolower(trim((string) ($data['job_type'] ?? ''));
+        $jobType = strtolower(trim((string) ($data['job_type'] ?? '')));
         if (!$this->handlers->has($jobType)) {
             throw new OperationsDomainException('Operation job type is not registered.');
         }
-        $aggregateType = strtolower(trim((string) ($data['aggregate_type'] ?? 'operation'));
+        $aggregateType = strtolower(trim((string) ($data['aggregate_type'] ?? 'operation')));
         $aggregateId = trim((string) ($data['aggregate_id'] ?? ''));
         $idempotencyKey = trim((string) ($data['idempotency_key'] ?? ''));
         $payload = $data['payload'] ?? [];
