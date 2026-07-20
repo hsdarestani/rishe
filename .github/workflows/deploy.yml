@@ -41,7 +41,7 @@ jobs:
             --pattern "rishe-${VERSION}.zip.sig" \
             --pattern "rishe-${VERSION}.pub.pem"
       - name: Verify signed package
-        run: scripts/verify-release.sh \
+        run: bash scripts/verify-release.sh \
           "dist/rishe-${VERSION}.zip" \
           "dist/rishe-${VERSION}.zip.sha256" \
           "dist/rishe-${VERSION}.zip.sig" \
