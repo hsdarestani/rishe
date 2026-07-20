@@ -17,6 +17,7 @@ final class PersianLocalizationTest extends TestCase
             'src/Infrastructure/WordPress/ErpAdminPage.php' => ['محیط کاری سامانه ریشه', 'بخش‌های ماژول'],
             'src/Operations/Infrastructure/WordPress/OperationsAdminPage.php' => ['مرکز کنترل عملیات', 'کارهای پس‌زمینه'],
             'src/Analytics/Infrastructure/WordPress/AnalyticsAdminPage.php' => ['هوش مدیریتی', 'تحلیل‌های سامانه ریشه'],
+            'src/WooCommerce/Infrastructure/WordPress/WooCommerceSyncAdminPage.php' => ['اتصال کامل ووکامرس', 'انبار مرجع ریشه'],
         ];
 
         foreach ($expectations as $path => $phrases) {
@@ -43,7 +44,7 @@ final class PersianLocalizationTest extends TestCase
     {
         $plugin = file_get_contents(dirname(__DIR__, 3) . '/rishe.php');
         self::assertIsString($plugin);
-        self::assertStringContainsString('Version: 1.5.2', $plugin);
-        self::assertStringContainsString("define('RISHE_VERSION', '1.5.2');", $plugin);
+        self::assertStringContainsString('Version: 1.6.0', $plugin);
+        self::assertStringContainsString("define('RISHE_VERSION', '1.6.0');", $plugin);
     }
 }
