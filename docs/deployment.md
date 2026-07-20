@@ -32,9 +32,62 @@ Certification combines the authenticated operations diagnostics with deployment 
 
 A failed check makes an environment non-certifiable. Warnings remain certifiable for staging but `--strict` can reject warnings. Every run is audited and its latest report is stored in WordPress options for operators.
 
+## Release candidate certification
+
+`.github/workflows/release-candidate.yml` proves that the production artifact itself works before a real signing key or staging host is used. It does not install the source checkout or a plugin-directory symlink.
+
+The workflow:
+
+1. resolves the version from `RISHE_VERSION`;
+2. generates an ephemeral RSA key pair scoped to the CI run;
+3. builds the deterministic production ZIP;
+4. verifies its checksum and RSA signature;
+5. rejects unsafe archive paths, multiple roots, missing production autoloaders, development files, and PHP syntax errors;
+6. installs the exact ZIP on clean WordPress instances backed by MySQL 8.0 and MariaDB 10.6;
+7. runs diagnostics and staging certification;
+8. creates a real backup, mutates both WordPress and ERP data, restores the backup, and proves the mutation was removed;
+9. verifies the mandatory pre-restore safety backup and uploads machine-readable evidence.
+
+Run the package-only rehearsal locally with:
+
+```bash
+composer release:candidate
+```
+
+The ephemeral key proves the build and verification path but is not a production trust root. Tagged releases still require the repository signing secrets.
+
+## Package policy
+
+`scripts/package-smoke.sh` enforces the production package boundary. A valid archive has exactly one `rishe/` root, includes `rishe.php`, `composer.json`, and `vendor/autoload.php`, and contains no unsafe traversal paths.
+
+The following development-only content is rejected:
+
+- `.git` and `.github`
+- `tests`, `docs`, `scripts`, `dist`, and `node_modules`
+- PHPUnit and PHPCS configuration
+- `composer.lock`
+- local logs and editor artifacts
+
+Every PHP file in the extracted package is syntax-checked. The evidence contains the artifact hash, size, file count, PHP file count, version, and certification timestamp.
+
+## Disaster recovery rehearsal
+
+`scripts/recovery-rehearsal.sh` refuses to run when WordPress reports the `production` environment. On staging or CI it performs a complete restore exercise:
+
+1. stores a unique WordPress marker and completes an immutable `system.noop` ERP job;
+2. creates and verifies a source backup;
+3. changes the marker and creates a second ERP job after the backup;
+4. restores the source backup using the normal guarded WP-CLI command;
+5. proves the original marker and job returned;
+6. proves the post-backup ERP job disappeared;
+7. verifies the automatic safety backup;
+8. re-verifies the source backup and runs diagnostics and certification.
+
+This validates database export/import, migration replay, configuration replay, immutable operations data, backup checksums, and the safety-backup path in one executable test.
+
 ## Release workflow
 
-`.github/workflows/release.yml` runs quality gates, builds `rishe-<version>.zip`, produces a checksum and manifest, signs the checksum with RSA-SHA256, verifies the package, uploads a workflow artifact, and publishes tag builds as GitHub Releases.
+`.github/workflows/release.yml` runs quality gates, builds `rishe-<version>.zip`, produces a checksum and manifest, signs the checksum with RSA-SHA256, verifies the package and production file policy, uploads workflow evidence, and publishes tag builds as GitHub Releases.
 
 Required repository secrets:
 
@@ -60,17 +113,20 @@ The workflow downloads and cryptographically verifies the GitHub Release, upload
 
 ## Real database integration
 
-`.github/workflows/integration.yml` installs WordPress and the plugin against MySQL 8.0 and MariaDB 10.6. It activates all migrations and triggers, executes diagnostics and certification, creates and verifies a real database backup, races eight idempotent enqueue requests and four workers, and verifies that append-only job events reject direct updates.
+`.github/workflows/integration.yml` installs WordPress and the source checkout against MySQL 8.0 and MariaDB 10.6. It activates all migrations and triggers, executes diagnostics and certification, creates and verifies a real database backup, races eight idempotent enqueue requests and four workers, and verifies that append-only job events reject direct updates.
+
+`.github/workflows/release-candidate.yml` complements that suite by installing the packaged ZIP and executing the full disaster-recovery round trip on both database engines.
 
 ## Release procedure
 
-1. Merge a version bump with green CI and integration checks.
-2. Configure or rotate the release signing key secrets.
-3. Create and push tag `vX.Y.Z`.
-4. Verify the published checksum, signature, public key, dependency inventory, and release manifest.
-5. Dispatch Deploy to `staging` with dry-run enabled.
-6. Deploy to staging, execute business smoke tests, and verify a fresh backup.
-7. Dispatch Deploy to the protected `production` environment.
-8. Confirm the recorded deployment hash and certification report in the WordPress operations center.
+1. Merge a version bump with green CI, integration, and release-candidate checks.
+2. Review the package and recovery evidence artifacts for both database engines.
+3. Configure or rotate the release signing key secrets.
+4. Create and push tag `vX.Y.Z`.
+5. Verify the published checksum, signature, public key, dependency inventory, package evidence, and release manifest.
+6. Dispatch Deploy to `staging` with dry-run enabled.
+7. Deploy to staging, execute business and provider smoke tests, and run a fresh recovery rehearsal in a staging clone.
+8. Dispatch Deploy to the protected `production` environment.
+9. Confirm the recorded deployment hash and certification report in the WordPress operations center.
 
 Provider certification remains account-specific. Taxpayer, payment, and carrier credentials, accepted sample payloads, callback signatures, and error catalogs must be validated with the live providers before production traffic is enabled.
