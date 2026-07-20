@@ -7,6 +7,12 @@ on:
     paths:
       - '.analytics-payload/**'
       - '.github/workflows/apply-analytics-payload.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.analytics-payload/**'
+      - '.github/workflows/apply-analytics-payload.yml'
 
 permissions:
   contents: write
