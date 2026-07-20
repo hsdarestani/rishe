@@ -339,8 +339,10 @@ final class CreateAnalyticsTables implements Migration
             KEY entity_lookup (entity_type, entity_id)
         ) {$charset};");
 
-        foreach ([$sources, $campaigns, $attribution, $prices, $targets, $events, $projection, $facts,
-            $customers, $products, $orders, $time, $snapshots, $alerts] as $table) {
+        foreach (
+            [$sources, $campaigns, $attribution, $prices, $targets, $events, $projection, $facts,
+            $customers, $products, $orders, $time, $snapshots, $alerts] as $table
+        ) {
             $found = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($table)));
             if ($found !== $table) {
                 throw new RuntimeException('Unable to create required analytics table: ' . $table);
