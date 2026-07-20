@@ -15,6 +15,7 @@ A modular ERP and omnichannel operations plugin for WordPress and WooCommerce.
 composer install
 composer lint
 composer test
+composer release:candidate
 ```
 
 ## Implemented bounded contexts
@@ -31,7 +32,10 @@ composer test
 - Iranian fiscal invoicing, immutable official snapshots, RSA signing, submission, inquiry, retries, correction, cancellation, and return invoices
 - Administration UX, durable jobs, retries, incidents, diagnostics, and safe configuration portability
 - Production certification, WP-CLI operations, verified backups, signed release packages, real MySQL/MariaDB integration tests, protected staging promotion, and rollback-aware deployment automation
+- Release-candidate package installation, production-archive policy checks, and full backup/mutation/restore disaster-recovery rehearsals on MySQL and MariaDB
 
-Version `1.2.0` adds the production delivery and certification toolchain. Provider credentials and contracts still require account-specific certification before live traffic is enabled.
+Version `1.3.0` certifies the exact production ZIP rather than only the source checkout and produces machine-readable evidence that WordPress data and immutable ERP jobs survive a real backup/restore round trip. The database version remains unchanged because this delivery adds no schema migration.
+
+Provider credentials, provider contracts, the production signing key, and a real staging host still require account-specific configuration before live traffic is enabled.
 
 See `AGENTS.md` for implementation rules and the documents under `docs/` for module APIs, deployment requirements, and invariants.
