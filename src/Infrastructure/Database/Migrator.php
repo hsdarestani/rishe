@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rishe\Infrastructure\Database;
 
 use Rishe\Infrastructure\Database\Migrations\CreateAccountingTables;
+use Rishe\Infrastructure\Database\Migrations\CreateAnalyticsTables;
 use Rishe\Infrastructure\Database\Migrations\CreateB2BTables;
 use Rishe\Infrastructure\Database\Migrations\CreateFoundationTables;
 use Rishe\Infrastructure\Database\Migrations\CreateInventoryTables;
@@ -16,6 +17,7 @@ use Rishe\Infrastructure\Database\Migrations\CreateSalesCrmTables;
 use Rishe\Infrastructure\Database\Migrations\CreateTaxTables;
 use Rishe\Infrastructure\Database\Migrations\CreateTreasuryTables;
 use Rishe\Infrastructure\Database\Migrations\HardenB2BAccountGuard;
+use Rishe\Infrastructure\Database\Migrations\ProtectAnalyticsLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectB2BLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectLogisticsLedger;
 use Rishe\Infrastructure\Database\Migrations\ProtectManufacturingLedger;
@@ -58,6 +60,8 @@ final class Migrator
             new ProtectTaxLedger(),
             new CreateOperationsTables(),
             new ProtectOperationsLedger(),
+            new CreateAnalyticsTables(),
+            new ProtectAnalyticsLedger(),
         ];
     }
 
