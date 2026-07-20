@@ -14,11 +14,11 @@ trait OperationsEnqueueOperations
         if ($actorUserId < 1) {
             throw new OperationsDomainException('Operation job requires an authenticated actor.');
         }
-        $jobType = strtolower(trim((string) ($data['job_type'] ?? '')));
+        $jobType = strtolower(trim((string) ($data['job_type'] ?? ''));
         if (!$this->handlers->has($jobType)) {
             throw new OperationsDomainException('Operation job type is not registered.');
         }
-        $aggregateType = strtolower(trim((string) ($data['aggregate_type'] ?? 'operation')));
+        $aggregateType = strtolower(trim((string) ($data['aggregate_type'] ?? 'operation'));
         $aggregateId = trim((string) ($data['aggregate_id'] ?? ''));
         $idempotencyKey = trim((string) ($data['idempotency_key'] ?? ''));
         $payload = $data['payload'] ?? [];
@@ -61,7 +61,14 @@ trait OperationsEnqueueOperations
         ]));
 
         $job = $this->requireJob((int) $result['id']);
-        if (in_array($job['status'], [OperationJobStatus::PENDING->value, OperationJobStatus::RETRY_WAIT->value], true)) {
+        $schedulable = in_array(
+            $job['status'],
+            [OperationJobStatus::PENDING->value, OperationJobStatus::RETRY_WAIT->value],
+            true
+        );
+        $oldIdempotentRetry = (bool) $result['idempotent']
+            && strtotime((string) $job['created_at']) <= time() - 5;
+        if ($schedulable && (!(bool) $result['idempotent'] || $oldIdempotentRetry)) {
             $this->scheduler->schedule((int) $job['id'], (string) $job['scheduled_at']);
         }
         if (!$result['idempotent']) {
