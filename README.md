@@ -28,9 +28,10 @@ composer test
 - Procurement, landed costs, supplier liabilities, and accounts payable
 - B2B consignment, agent sales, commissions, credit limits, and settlements
 - Logistics carriers, quotes, labels, tracking, webhooks, costs, and settlement
-- Iranian fiscal invoicing, official product mappings, immutable snapshots, RSA signing, submission, inquiry, retries, correction, cancellation, and returns
-- Operations control center, durable background jobs, retry backoff, incidents, diagnostics, audit visibility, and safe non-secret configuration import/export
+- Iranian fiscal invoicing, immutable official snapshots, RSA signing, submission, inquiry, retries, correction, cancellation, and return invoices
+- Administration UX, durable jobs, retries, incidents, diagnostics, and safe configuration portability
+- Production certification, WP-CLI operations, verified backups, signed release packages, real MySQL/MariaDB integration tests, protected staging promotion, and rollback-aware deployment automation
 
-Version `1.1.0` adds the WordPress administration and operational-hardening foundation. The next delivery track is production certification and deployment automation: real provider contracts, MySQL concurrency suites, backup/restore verification, WP-CLI tools, staging promotion, and release packaging.
+Version `1.2.0` adds the production delivery and certification toolchain. Provider credentials and contracts still require account-specific certification before live traffic is enabled.
 
-See `AGENTS.md` for implementation rules and `docs/` for module APIs and invariants.
+See `AGENTS.md` for implementation rules and the documents under `docs/` for module APIs, deployment requirements, and invariants.

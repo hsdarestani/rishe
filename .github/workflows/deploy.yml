@@ -1,0 +1,81 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub deployment environment
+        required: true
+        type: choice
+        options: [staging, production]
+      version:
+        description: Release version without the v prefix
+        required: true
+        type: string
+      dry_run:
+        description: Run remote certification without replacing files
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+env:
+  VERSION: ${{ inputs.version }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist
+          gh release download "v${VERSION}" --dir dist \
+            --pattern "rishe-${VERSION}.zip" \
+            --pattern "rishe-${VERSION}.zip.sha256" \
+            --pattern "rishe-${VERSION}.zip.sig" \
+            --pattern "rishe-${VERSION}.pub.pem"
+      - name: Verify signed package
+        run: bash scripts/verify-release.sh \
+          "dist/rishe-${VERSION}.zip" \
+          "dist/rishe-${VERSION}.zip.sha256" \
+          "dist/rishe-${VERSION}.zip.sig" \
+          "dist/rishe-${VERSION}.pub.pem"
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${SSH_KEY}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${KNOWN_HOSTS}" > ~/.ssh/known_hosts
+      - name: Upload deployment payload
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          port="${PORT:-22}"
+          scp -P "${port}" \
+            "dist/rishe-${VERSION}.zip" \
+            scripts/remote-deploy.sh \
+            "${USER}@${HOST}:/tmp/"
+      - name: Deploy and verify
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+          WP_PATH: ${{ secrets.DEPLOY_WP_PATH }}
+        run: |
+          port="${PORT:-22}"
+          sha256="$(awk '{print $1}' "dist/rishe-${VERSION}.zip.sha256")"
+          dry_run=""
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then dry_run="--dry-run"; fi
+          ssh -p "${port}" "${USER}@${HOST}" \
+            "bash /tmp/remote-deploy.sh --archive /tmp/rishe-${VERSION}.zip --sha256 ${sha256} --wp-path '${WP_PATH}' --environment '${{ inputs.environment }}' ${dry_run}"

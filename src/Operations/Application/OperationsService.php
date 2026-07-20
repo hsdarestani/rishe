@@ -14,6 +14,7 @@ final class OperationsService
     use OperationsExecutionOperations;
     use OperationsControlOperations;
     use OperationsFailureOperations;
+    use OperationsSchedulingOperations;
     use OperationsValidation;
 
     public function __construct(

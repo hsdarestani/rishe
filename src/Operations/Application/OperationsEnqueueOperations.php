@@ -61,7 +61,14 @@ trait OperationsEnqueueOperations
         ]));
 
         $job = $this->requireJob((int) $result['id']);
-        if (in_array($job['status'], [OperationJobStatus::PENDING->value, OperationJobStatus::RETRY_WAIT->value], true)) {
+        $schedulable = in_array(
+            $job['status'],
+            [OperationJobStatus::PENDING->value, OperationJobStatus::RETRY_WAIT->value],
+            true
+        );
+        $oldIdempotentRetry = (bool) $result['idempotent']
+            && strtotime((string) $job['created_at']) <= time() - 5;
+        if ($schedulable && (!(bool) $result['idempotent'] || $oldIdempotentRetry)) {
             $this->scheduler->schedule((int) $job['id'], (string) $job['scheduled_at']);
         }
         if (!$result['idempotent']) {

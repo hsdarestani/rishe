@@ -41,6 +41,7 @@ final class OperationsRuntime
     {
         try {
             $this->service->recoverStaleJobs();
+            $this->service->reconcileSchedules();
         } catch (Throwable $exception) {
             error_log('Rishe operations maintenance failure: ' . $exception->getMessage());
         }

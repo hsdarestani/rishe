@@ -1,0 +1,105 @@
+name: WordPress Integration
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'rishe.php'
+      - 'composer.json'
+      - 'scripts/**'
+      - '.github/workflows/integration.yml'
+  workflow_dispatch:
+
+jobs:
+  wordpress:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - database: 'mysql:8.0'
+            label: mysql80
+          - database: 'mariadb:10.6'
+            label: mariadb106
+    services:
+      db:
+        image: ${{ matrix.database }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+          extensions: mysqli, zip, openssl
+          tools: composer:v2
+      - name: Install WP-CLI and database client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq default-mysql-client
+          curl -sSLo /tmp/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x /tmp/wp
+          sudo mv /tmp/wp /usr/local/bin/wp
+      - name: Install WordPress and Rishe
+        run: |
+          composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+          wp core download --path=/tmp/wordpress --allow-root --quiet
+          wp config create --path=/tmp/wordpress --dbname=wordpress --dbuser=root --dbpass=root --dbhost=127.0.0.1:3306 --skip-check --allow-root
+          wp core install --path=/tmp/wordpress --url=http://example.test --title=Rishe --admin_user=admin --admin_password=password --admin_email=admin@example.test --skip-email --allow-root
+          ln -s "${GITHUB_WORKSPACE}" /tmp/wordpress/wp-content/plugins/rishe
+          wp plugin activate rishe --path=/tmp/wordpress --allow-root
+      - name: Runtime, migration and backup smoke tests
+        run: bash scripts/runtime-smoke.sh /tmp/wordpress
+      - name: Package runtime diagnostics
+        if: always()
+        run: |
+          mkdir -p rishe-runtime
+          if [[ ! -f rishe-runtime/summary.log ]]; then
+            echo "Runtime smoke stopped before summary generation." > rishe-runtime/summary.log
+          fi
+          tar -czf "runtime-${{ matrix.label }}.tgz" rishe-runtime
+      - name: Upload runtime diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-${{ matrix.label }}
+          path: runtime-${{ matrix.label }}.tgz
+          if-no-files-found: error
+      - name: Concurrent idempotency and worker smoke test
+        run: bash scripts/concurrency-smoke.sh /tmp/wordpress
+      - name: Package concurrency diagnostics
+        if: always()
+        run: |
+          mkdir -p rishe-concurrency
+          if [[ ! -f rishe-concurrency/summary.log ]]; then
+            echo "No summary was produced." > rishe-concurrency/summary.log
+          fi
+          tar -czf "concurrency-${{ matrix.label }}.tgz" rishe-concurrency
+      - name: Upload concurrency diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: concurrency-${{ matrix.label }}
+          path: concurrency-${{ matrix.label }}.tgz
+          if-no-files-found: error
+      - name: Immutable job-event trigger smoke test
+        shell: bash
+        run: |
+          prefix="$(wp db prefix --path=/tmp/wordpress --allow-root)"
+          event_id="$(wp db query "SELECT id FROM ${prefix}rishe_operation_job_events ORDER BY id DESC LIMIT 1" --skip-column-names --path=/tmp/wordpress --allow-root)"
+          set +e
+          wp db query "UPDATE ${prefix}rishe_operation_job_events SET message='tampered' WHERE id=${event_id}" --path=/tmp/wordpress --allow-root
+          status=$?
+          set -e
+          test "${status}" -ne 0
