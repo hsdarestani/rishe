@@ -1,0 +1,64 @@
+name: Debug Analytics Activation
+
+on:
+  push:
+    branches:
+      - agent/analytics-executive-intelligence
+    paths:
+      - '.github/workflows/debug-analytics-activation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  activate:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+          extensions: mysqli, zip, openssl
+          tools: composer:v2
+      - name: Install WordPress and capture activation
+        shell: bash
+        run: |
+          set -o pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq default-mysql-client
+          curl -sSLo /tmp/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x /tmp/wp
+          sudo mv /tmp/wp /usr/local/bin/wp
+          composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+          wp core download --path=/tmp/wordpress --allow-root --quiet
+          wp config create --path=/tmp/wordpress --dbname=wordpress --dbuser=root --dbpass=root --dbhost=127.0.0.1:3306 --skip-check --allow-root
+          wp core install --path=/tmp/wordpress --url=http://example.test --title=Rishe --admin_user=admin --admin_password=password --admin_email=admin@example.test --skip-email --allow-root
+          ln -s "${GITHUB_WORKSPACE}" /tmp/wordpress/wp-content/plugins/rishe
+          set +e
+          wp plugin activate rishe --path=/tmp/wordpress --allow-root --debug >activation.log 2>&1
+          status=$?
+          set -e
+          echo "exit_code=${status}" >> activation.log
+          tail -n 160 activation.log
+          exit "${status}"
+      - name: Upload activation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analytics-activation-debug
+          path: activation.log
+          if-no-files-found: error
