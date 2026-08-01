@@ -47,20 +47,28 @@ final class TemporaryFinancialRestApi
                 $credit = (int) ($row['credit_balance'] ?? 0);
                 $balance = max($debit, $credit);
 
-                if ($this->containsAny($name, ['دارایی', 'موجودی', 'بانک', 'صندوق', 'دریافتنی'])
-                    || str_starts_with($code, '1')) {
+                if (
+                    $this->containsAny($name, ['دارایی', 'موجودی', 'بانک', 'صندوق', 'دریافتنی'])
+                    || str_starts_with($code, '1')
+                ) {
                     $totals['assets'] += $balance;
-                } elseif ($this->containsAny($name, ['بدهی', 'پرداختنی', 'تعهد'])
-                    || str_starts_with($code, '2')) {
+                } elseif (
+                    $this->containsAny($name, ['بدهی', 'پرداختنی', 'تعهد'])
+                    || str_starts_with($code, '2')
+                ) {
                     $totals['liabilities'] += $balance;
-                } elseif ($this->containsAny($name, ['سرمایه', 'حقوق مالکانه', 'اندوخته'])
-                    || str_starts_with($code, '3')) {
+                } elseif (
+                    $this->containsAny($name, ['سرمایه', 'حقوق مالکانه', 'اندوخته'])
+                    || str_starts_with($code, '3')
+                ) {
                     $totals['equity'] += $balance;
                 } elseif ($this->containsAny($name, ['درآمد', 'فروش']) || str_starts_with($code, '4')) {
                     $totals['revenue'] += $credit > 0 ? $credit : $balance;
-                } elseif ($this->containsAny($name, ['هزینه', 'بهای تمام شده', 'بهای تمام‌شده'])
+                } elseif (
+                    $this->containsAny($name, ['هزینه', 'بهای تمام شده', 'بهای تمام‌شده'])
                     || str_starts_with($code, '5')
-                    || str_starts_with($code, '6')) {
+                    || str_starts_with($code, '6')
+                ) {
                     $totals['expenses'] += $debit > 0 ? $debit : $balance;
                 }
             }
