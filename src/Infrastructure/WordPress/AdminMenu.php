@@ -69,21 +69,39 @@ final class AdminMenu
         $primary = [
             'rishe-work-inventory' => ['انبار و بسته‌بندی', 'rishe_manage_inventory'],
             'rishe-work-sales' => ['فروش و بازاریابی', 'rishe_manage_sales'],
-            'rishe-event-sales' => ['فروش ایونت', 'rishe_manage_sales'],
             'rishe-work-procurement' => ['بازرگانی و تأمین', 'rishe_manage_procurement'],
             'rishe-work-finance' => ['مالی و حسابداری', 'rishe_manage_accounting'],
-            'rishe-accounting-review' => ['کارتابل تأیید اسناد', 'rishe_manage_accounting'],
             'rishe-work-logistics' => ['لجستیک', 'rishe_manage_logistics'],
             'rishe-work-b2b' => ['فروش B2B', 'rishe_manage_b2b'],
         ];
         foreach ($primary as $slug => [$title, $capability]) {
-            $callback = match ($slug) {
-                EventSalesAdminPage::SLUG => [$this->eventSales, 'render'],
-                AccountingReviewAdminPage::SLUG => [$this->accountingReview, 'render'],
-                default => [$this->business, 'render'],
-            };
-            add_submenu_page('rishe', $title, $title, $capability, $slug, $callback);
+            add_submenu_page(
+                'rishe',
+                $title,
+                $title,
+                $capability,
+                $slug,
+                [$this->business, 'render']
+            );
         }
+
+        // این دو صفحه از فضای کاری فروش و حسابداری باز می‌شوند و منوی جدا ندارند.
+        add_submenu_page(
+            null,
+            __('کارتابل تأیید اسناد', 'rishe'),
+            __('کارتابل تأیید اسناد', 'rishe'),
+            'rishe_manage_accounting',
+            AccountingReviewAdminPage::SLUG,
+            [$this->accountingReview, 'render']
+        );
+        add_submenu_page(
+            null,
+            __('فروش ایونت', 'rishe'),
+            __('فروش ایونت', 'rishe'),
+            'rishe_manage_sales',
+            EventSalesAdminPage::SLUG,
+            [$this->eventSales, 'render']
+        );
 
         add_submenu_page(
             'rishe',
