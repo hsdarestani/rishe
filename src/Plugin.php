@@ -11,8 +11,10 @@ use Rishe\B2B\Infrastructure\WordPress\B2BRestApi;
 use Rishe\Deployment\Infrastructure\WordPress\RisheCliRegistrar;
 use Rishe\Infrastructure\Database\Migrator;
 use Rishe\Infrastructure\WordPress\AdminMenu;
+use Rishe\Infrastructure\WordPress\BusinessDialogCompatibility;
 use Rishe\Infrastructure\WordPress\BusinessRestApi;
 use Rishe\Infrastructure\WordPress\Capabilities;
+use Rishe\Infrastructure\WordPress\DefaultWarehouseProvisioner;
 use Rishe\Infrastructure\WordPress\PersianAdminLocalization;
 use Rishe\Infrastructure\WordPress\RestApi;
 use Rishe\Infrastructure\WordPress\TemporaryFinancialRestApi;
@@ -38,8 +40,10 @@ final class Plugin
         $migrator = new Migrator();
         $migrator->maybeMigrate();
         Capabilities::maybeGrant();
+        (new DefaultWarehouseProvisioner())->ensure();
 
         (new AdminMenu())->register();
+        (new BusinessDialogCompatibility())->register();
         (new PersianAdminLocalization())->register();
         (new RestApi())->register();
         (new BusinessRestApi())->register();
