@@ -11,6 +11,7 @@ use Rishe\B2B\Infrastructure\WordPress\B2BRestApi;
 use Rishe\Deployment\Infrastructure\WordPress\RisheCliRegistrar;
 use Rishe\Infrastructure\Database\Migrator;
 use Rishe\Infrastructure\WordPress\AdminMenu;
+use Rishe\Infrastructure\WordPress\BusinessRestApi;
 use Rishe\Infrastructure\WordPress\Capabilities;
 use Rishe\Infrastructure\WordPress\PersianAdminLocalization;
 use Rishe\Infrastructure\WordPress\RestApi;
@@ -40,6 +41,7 @@ final class Plugin
         (new AdminMenu())->register();
         (new PersianAdminLocalization())->register();
         (new RestApi())->register();
+        (new BusinessRestApi())->register();
         (new AccountingRestApi())->register();
         (new InventoryRestApi())->register();
         (new ManufacturingRestApi())->register();
