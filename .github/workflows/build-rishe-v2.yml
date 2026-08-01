@@ -1,0 +1,65 @@
+name: Build Rishe v2 package
+
+on:
+  push:
+    branches:
+      - main
+      - agent/rishe-v2-workflows
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install production autoloader
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+
+      - name: Validate changed PHP files
+        run: |
+          php -l rishe.php
+          php -l src/Plugin.php
+          php -l src/Infrastructure/WordPress/AdminMenu.php
+          php -l src/Infrastructure/WordPress/BusinessAdminPage.php
+          php -l src/Infrastructure/WordPress/BusinessRestApi.php
+          php -l src/Infrastructure/WordPress/Capabilities.php
+
+      - name: Validate admin JavaScript
+        run: node --check assets/admin/business.js
+
+      - name: Build installable ZIP
+        run: |
+          mkdir -p build/rishe
+          rsync -a ./ build/rishe/ \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'build' \
+            --exclude 'tests' \
+            --exclude 'phpunit.xml.dist' \
+            --exclude 'phpcs.xml.dist' \
+            --exclude 'composer.lock'
+          cd build
+          zip -qr rishe-2.0.0.zip rishe
+
+      - name: Upload plugin package
+        uses: actions/upload-artifact@v4
+        with:
+          name: rishe-2.0.0
+          path: build/rishe-2.0.0.zip
+          if-no-files-found: error
+          retention-days: 30
