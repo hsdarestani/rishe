@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Rishe\Infrastructure\WordPress;
 
+use Rishe\Accounting\Infrastructure\WordPress\AccountingReviewAdminPage;
+use Rishe\EventSales\Infrastructure\WordPress\EventSalesAdminPage;
+
 final class BusinessAdminPage
 {
     /** @var array<string, array{section:string,title:string,description:string,capability:string}> */
@@ -164,6 +167,8 @@ final class BusinessAdminPage
                 <?php endforeach; ?>
             </nav>
 
+            <?php $this->renderWorkspaceEntry($page); ?>
+
             <div class="rishe-business__notice hidden" data-rishe-notice></div>
             <main class="rishe-business__main" data-rishe-content>
                 <div class="rishe-business__loading">
@@ -186,6 +191,39 @@ final class BusinessAdminPage
             </dialog>
         </div>
         <?php
+    }
+
+    private function renderWorkspaceEntry(string $page): void
+    {
+        if ($page === 'rishe-work-finance') {
+            ?>
+            <section class="rishe-source is-connected">
+                <span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>
+                <div>
+                    <strong>کارتابل تأیید اسناد مالی</strong>
+                    <p>اسناد فروش، خرید، حقوق، اجاره و سایر هزینه‌ها را بررسی، تأیید یا رد کنید.</p>
+                </div>
+                <a class="rishe-button rishe-button--light" href="<?php echo esc_url(admin_url('admin.php?page=' . AccountingReviewAdminPage::SLUG)); ?>">
+                    ورود به کارتابل
+                </a>
+            </section>
+            <?php
+        }
+
+        if ($page === 'rishe-work-sales') {
+            ?>
+            <section class="rishe-source is-warning">
+                <span class="dashicons dashicons-store" aria-hidden="true"></span>
+                <div>
+                    <strong>فروش حضوری و ایونت</strong>
+                    <p>ایونت، انبار و فروشنده را تعریف کنید و فروش‌های آفلاین موبایل را مدیریت کنید.</p>
+                </div>
+                <a class="rishe-button" href="<?php echo esc_url(admin_url('admin.php?page=' . EventSalesAdminPage::SLUG)); ?>">
+                    مدیریت ایونت‌ها
+                </a>
+            </section>
+            <?php
+        }
     }
 
     /** @return array<string, array{label:string,icon:string,capability:string}> */
