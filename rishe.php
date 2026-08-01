@@ -3,8 +3,8 @@
 /**
  * Plugin Name: ریشه – سیستم عملیاتی کسب‌وکار
  * Plugin URI: https://github.com/hsdarestani/rishe
- * Description: سیستم یکپارچه و ساده ریشه برای ووکامرس، انبار چندشعبه‌ای، تأمین، مالی، لجستیک و فروش B2B.
- * Version: 2.0.1
+ * Description: سیستم یکپارچه ریشه برای ووکامرس، انبار، تأمین، کارتابل مالی، فروش آفلاین ایونت، لجستیک و B2B.
+ * Version: 2.1.0
  * Author: Hossein Darestani
  * Requires at least: 6.5
  * Requires PHP: 8.1
@@ -17,8 +17,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('RISHE_VERSION', '2.0.1');
-define('RISHE_DB_VERSION', '2026071925');
+define('RISHE_VERSION', '2.1.0');
+define('RISHE_DB_VERSION', '2026080102');
 define('RISHE_FILE', __FILE__);
 define('RISHE_PATH', plugin_dir_path(__FILE__));
 define('RISHE_URL', plugin_dir_url(__FILE__));
