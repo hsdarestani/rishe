@@ -96,8 +96,8 @@ final class PersianLocalizationTest extends TestCase
         self::assertStringNotContainsString("'rishe-event-sales' =>", $menu);
         self::assertStringNotContainsString("'rishe-accounting-review' =>", $menu);
         self::assertStringContainsString('renderWorkspaceEntry', $business);
-        self::assertStringContainsString("return $this->isCurrentPage() ? 'rishe-work-finance'", $accounting);
-        self::assertStringContainsString("return $this->isCurrentPage() ? 'rishe-work-sales'", $events);
+        self::assertStringContainsString("return \$this->isCurrentPage() ? 'rishe-work-finance'", $accounting);
+        self::assertStringContainsString("return \$this->isCurrentPage() ? 'rishe-work-sales'", $events);
     }
 
     public function testPersianReleaseVersionIsConsistent(): void
