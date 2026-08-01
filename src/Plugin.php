@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Rishe;
 
+use Rishe\Accounting\Infrastructure\WordPress\AccountingApprovalRestApi;
 use Rishe\Accounting\Infrastructure\WordPress\AccountingRestApi;
 use Rishe\Analytics\Infrastructure\WordPress\AnalyticsRestApi;
 use Rishe\Analytics\Infrastructure\WordPress\AnalyticsRuntime;
 use Rishe\B2B\Infrastructure\WordPress\B2BRestApi;
 use Rishe\Deployment\Infrastructure\WordPress\RisheCliRegistrar;
+use Rishe\EventSales\Infrastructure\WordPress\EventSalesPage;
+use Rishe\EventSales\Infrastructure\WordPress\EventSalesRestApi;
 use Rishe\Infrastructure\Database\Migrator;
 use Rishe\Infrastructure\WordPress\AdminMenu;
 use Rishe\Infrastructure\WordPress\BusinessDialogCompatibility;
@@ -45,10 +48,13 @@ final class Plugin
         (new AdminMenu())->register();
         (new BusinessDialogCompatibility())->register();
         (new PersianAdminLocalization())->register();
+        (new EventSalesPage())->register();
         (new RestApi())->register();
         (new BusinessRestApi())->register();
         (new TemporaryFinancialRestApi())->register();
         (new AccountingRestApi())->register();
+        (new AccountingApprovalRestApi())->register();
+        (new EventSalesRestApi())->register();
         (new InventoryRestApi())->register();
         (new ManufacturingRestApi())->register();
         (new SalesRestApi())->register();
