@@ -12,10 +12,12 @@ final class PersianLocalizationTest extends TestCase
     {
         $root = dirname(__DIR__, 3);
         $expectations = [
-            'rishe.php' => ['Plugin Name: ریشه', 'سیستم عملیاتی'],
-            'src/Infrastructure/WordPress/AdminMenu.php' => ['مرکز فرمان', 'انبار و بسته‌بندی', 'فروش و بازاریابی'],
+            'rishe.php' => ['Plugin Name: ریشه', 'فروش آفلاین ایونت'],
+            'src/Infrastructure/WordPress/AdminMenu.php' => ['کارتابل تأیید اسناد', 'فروش ایونت'],
             'src/Infrastructure/WordPress/BusinessAdminPage.php' => ['سیستم عملیاتی کسب‌وکار ریشه', 'مرکز فرمان ریشه'],
-            'src/Infrastructure/WordPress/ErpAdminPage.php' => ['محیط کاری سامانه ریشه', 'بخش‌های ماژول'],
+            'src/Accounting/Infrastructure/WordPress/AccountingReviewAdminPage.php' => ['کارتابل تأیید اسناد', 'منابع انسانی'],
+            'src/EventSales/Infrastructure/WordPress/EventSalesAdminPage.php' => ['ایونت‌های فروش ریشه', 'اپ فروش'],
+            'src/EventSales/Infrastructure/WordPress/EventSalesPage.php' => ['فروش ایونت ریشه', 'صف آفلاین'],
             'src/Operations/Infrastructure/WordPress/OperationsAdminPage.php' => ['مرکز کنترل عملیات', 'کارهای پس‌زمینه'],
             'src/Analytics/Infrastructure/WordPress/AnalyticsAdminPage.php' => ['هوش مدیریتی', 'تحلیل‌های سامانه ریشه'],
             'src/WooCommerce/Infrastructure/WordPress/WooCommerceSyncAdminPage.php' => ['اتصال کامل ووکامرس', 'انبار مرجع ریشه'],
@@ -57,11 +59,32 @@ final class PersianLocalizationTest extends TestCase
         self::assertStringContainsString('انبار مرکزی', $warehouse);
     }
 
+    public function testAccountingReviewAndOfflineEventSalesAreRegistered(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $plugin = file_get_contents($root . '/src/Plugin.php');
+        $migration = file_get_contents(
+            $root . '/src/Infrastructure/Database/Migrations/CreateAccountingReviewAndEventSalesTables.php'
+        );
+        $app = file_get_contents($root . '/assets/event-app/app.js');
+
+        self::assertIsString($plugin);
+        self::assertIsString($migration);
+        self::assertIsString($app);
+        self::assertStringContainsString('AccountingApprovalRestApi', $plugin);
+        self::assertStringContainsString('EventSalesRestApi', $plugin);
+        self::assertStringContainsString('rishe_voucher_reviews', $migration);
+        self::assertStringContainsString('rishe_event_sales', $migration);
+        self::assertStringContainsString("indexedDB.open('rishe-event-sales'", $app);
+        self::assertStringContainsString("window.addEventListener('online'", $app);
+    }
+
     public function testPersianReleaseVersionIsConsistent(): void
     {
         $plugin = file_get_contents(dirname(__DIR__, 3) . '/rishe.php');
         self::assertIsString($plugin);
-        self::assertStringContainsString('Version: 2.0.1', $plugin);
-        self::assertStringContainsString("define('RISHE_VERSION', '2.0.1');", $plugin);
+        self::assertStringContainsString('Version: 2.1.0', $plugin);
+        self::assertStringContainsString("define('RISHE_VERSION', '2.1.0');", $plugin);
+        self::assertStringContainsString("define('RISHE_DB_VERSION', '2026080102');", $plugin);
     }
 }
