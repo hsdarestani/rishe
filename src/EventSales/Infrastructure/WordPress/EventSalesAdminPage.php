@@ -11,11 +11,14 @@ final class EventSalesAdminPage
     public function register(): void
     {
         add_action('admin_enqueue_scripts', [$this, 'assets']);
+        add_filter('parent_file', [$this, 'parentFile']);
+        add_filter('submenu_file', [$this, 'submenuFile']);
     }
 
     public function assets(string $hook): void
     {
-        if ($hook !== 'rishe_page_' . self::SLUG) {
+        unset($hook);
+        if (!$this->isCurrentPage()) {
             return;
         }
         wp_enqueue_style(
@@ -38,6 +41,16 @@ final class EventSalesAdminPage
         ]);
     }
 
+    public function parentFile(string $parentFile): string
+    {
+        return $this->isCurrentPage() ? 'rishe' : $parentFile;
+    }
+
+    public function submenuFile(?string $submenuFile): ?string
+    {
+        return $this->isCurrentPage() ? 'rishe-work-sales' : $submenuFile;
+    }
+
     public function render(): void
     {
         if (!current_user_can('rishe_manage_sales') && !current_user_can('manage_rishe')) {
@@ -45,6 +58,10 @@ final class EventSalesAdminPage
         }
         ?>
         <div class="wrap rishe-events" id="rishe-event-sales-admin" dir="rtl" lang="fa">
+            <a class="rishe-events__back" href="<?php echo esc_url(admin_url('admin.php?page=rishe-work-sales')); ?>">
+                <span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
+                بازگشت به فروش و بازاریابی
+            </a>
             <header class="rishe-events__hero">
                 <div>
                     <p>فروش حضوری و بازارچه</p>
@@ -76,5 +93,12 @@ final class EventSalesAdminPage
             </dialog>
         </div>
         <?php
+    }
+
+    private function isCurrentPage(): bool
+    {
+        $page = isset($_GET['page']) ? sanitize_key((string) wp_unslash($_GET['page'])) : '';
+
+        return $page === self::SLUG;
     }
 }
