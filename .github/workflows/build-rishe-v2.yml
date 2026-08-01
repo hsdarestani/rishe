@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - agent/rishe-v2-workflows
+      - agent/fix-warehouse-and-buttons
   pull_request:
     branches:
       - main
@@ -30,20 +31,32 @@ jobs:
       - name: Install production autoloader
         run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
+      - name: Resolve plugin version
+        id: version
+        shell: bash
+        run: |
+          version=$(php -r '$source=file_get_contents("rishe.php"); preg_match("/Version:\\s*([0-9.]+)/", $source, $match); echo $match[1] ?? "unknown";')
+          test "$version" != "unknown"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       - name: Validate changed PHP files
         run: |
           php -l rishe.php
           php -l src/Plugin.php
           php -l src/Infrastructure/WordPress/AdminMenu.php
           php -l src/Infrastructure/WordPress/BusinessAdminPage.php
+          php -l src/Infrastructure/WordPress/BusinessDialogCompatibility.php
           php -l src/Infrastructure/WordPress/BusinessRestApi.php
           php -l src/Infrastructure/WordPress/Capabilities.php
+          php -l src/Infrastructure/WordPress/DefaultWarehouseProvisioner.php
 
       - name: Validate admin JavaScript
         run: node --check assets/admin/business.js
 
       - name: Build installable ZIP
+        shell: bash
         run: |
+          version='${{ steps.version.outputs.version }}'
           mkdir -p build/rishe
           rsync -a ./ build/rishe/ \
             --exclude '.git' \
@@ -54,12 +67,12 @@ jobs:
             --exclude 'phpcs.xml.dist' \
             --exclude 'composer.lock'
           cd build
-          zip -qr rishe-2.0.0.zip rishe
+          zip -qr "rishe-${version}.zip" rishe
 
       - name: Upload plugin package
         uses: actions/upload-artifact@v4
         with:
-          name: rishe-2.0.0
-          path: build/rishe-2.0.0.zip
+          name: rishe-${{ steps.version.outputs.version }}
+          path: build/rishe-${{ steps.version.outputs.version }}.zip
           if-no-files-found: error
           retention-days: 30
