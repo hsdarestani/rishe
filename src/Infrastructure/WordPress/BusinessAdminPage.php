@@ -154,7 +154,9 @@ final class BusinessAdminPage
 
             <nav class="rishe-business__nav" aria-label="بخش‌های اصلی ریشه">
                 <?php foreach ($this->navigation() as $slug => $item) : ?>
-                    <?php if (!$this->canAccess($item['capability'])) { continue; } ?>
+                    <?php if (!$this->canAccess($item['capability'])) : ?>
+                        <?php continue; ?>
+                    <?php endif; ?>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=' . $slug)); ?>" class="<?php echo $slug === $page ? 'is-active' : ''; ?>">
                         <span class="dashicons <?php echo esc_attr($item['icon']); ?>" aria-hidden="true"></span>
                         <?php echo esc_html($item['label']); ?>
