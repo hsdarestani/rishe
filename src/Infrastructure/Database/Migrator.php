@@ -100,13 +100,21 @@ final class Migrator
         }
     }
 
-    /** @param array<string, string> $queries @return array<string, string> */
+    /**
+     * Shared hosts sometimes retain the legacy COMPACT InnoDB default, whose
+     * 767-byte key limit rejects valid utf8mb4 composite indexes. Make every
+     * dbDelta-created Rishe table explicitly use the modern dynamic row format.
+     *
+     * @param array<string, string> $queries
+     * @return array<string, string>
+     */
     public function useCompatibleInnoDbTableOptions(array $queries): array
     {
         foreach ($queries as $table => $query) {
             if (stripos($query, 'ROW_FORMAT=') !== false) {
                 continue;
             }
+
             $queries[$table] = rtrim(rtrim($query), ';') . ' ENGINE=InnoDB ROW_FORMAT=DYNAMIC;';
         }
 
@@ -170,6 +178,7 @@ final class Migrator
         if ($databaseError !== '' && !str_contains($message, $databaseError)) {
             $message .= ' خطای پایگاه‌داده: ' . $databaseError;
         }
+
         $server = method_exists($wpdb, 'db_server_info')
             ? trim((string) $wpdb->db_server_info())
             : trim((string) $wpdb->get_var('SELECT VERSION()'));
