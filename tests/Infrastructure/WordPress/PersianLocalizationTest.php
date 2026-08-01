@@ -41,11 +41,27 @@ final class PersianLocalizationTest extends TestCase
         self::assertStringContainsString('localizeObject', $contents);
     }
 
+    public function testBusinessDialogAndWarehouseRecoveryAreRegistered(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $plugin = file_get_contents($root . '/src/Plugin.php');
+        $dialog = file_get_contents($root . '/src/Infrastructure/WordPress/BusinessDialogCompatibility.php');
+        $warehouse = file_get_contents($root . '/src/Infrastructure/WordPress/DefaultWarehouseProvisioner.php');
+
+        self::assertIsString($plugin);
+        self::assertIsString($dialog);
+        self::assertIsString($warehouse);
+        self::assertStringContainsString('BusinessDialogCompatibility', $plugin);
+        self::assertStringContainsString('DefaultWarehouseProvisioner', $plugin);
+        self::assertStringContainsString('repairDialogFrame', $dialog);
+        self::assertStringContainsString('انبار مرکزی', $warehouse);
+    }
+
     public function testPersianReleaseVersionIsConsistent(): void
     {
         $plugin = file_get_contents(dirname(__DIR__, 3) . '/rishe.php');
         self::assertIsString($plugin);
-        self::assertStringContainsString('Version: 2.0.0', $plugin);
-        self::assertStringContainsString("define('RISHE_VERSION', '2.0.0');", $plugin);
+        self::assertStringContainsString('Version: 2.0.1', $plugin);
+        self::assertStringContainsString("define('RISHE_VERSION', '2.0.1');", $plugin);
     }
 }
