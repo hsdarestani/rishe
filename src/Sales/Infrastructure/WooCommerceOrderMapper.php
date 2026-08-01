@@ -70,9 +70,17 @@ final class WooCommerceOrderMapper
             ];
         }
 
-        $warehouseId = (int) get_option('rishe_woocommerce_warehouse_id', 0);
+        $warehouseId = (int) ($payload['warehouse_id'] ?? 0);
+        if ($warehouseId < 1) {
+            $warehouseId = (int) get_option('rishe_woocommerce_warehouse_id', 0);
+        }
         if ($warehouseId < 1) {
             throw new SalesDomainException('WooCommerce warehouse mapping is not configured.');
+        }
+        $channel = sanitize_key((string) ($payload['channel'] ?? 'woocommerce'));
+        $allowedChannels = ['woocommerce', 'website', 'telegram', 'instagram', 'bale', 'pos', 'b2b', 'event', 'manual', 'other'];
+        if (!in_array($channel, $allowedChannels, true)) {
+            $channel = 'woocommerce';
         }
 
         $status = strtolower(trim((string) ($payload['status'] ?? 'pending')));
@@ -91,7 +99,7 @@ final class WooCommerceOrderMapper
 
         return [
             'order' => [
-                'channel' => 'woocommerce',
+                'channel' => $channel,
                 'external_order_id' => $externalId,
                 'warehouse_id' => $warehouseId,
                 'customer' => [
@@ -107,7 +115,7 @@ final class WooCommerceOrderMapper
                 'lines' => $lines,
                 'shipping_irr' => $this->money($payload['shipping_total'] ?? 0, $multiplier, 'shipping total'),
                 'tax_irr' => $this->money($payload['total_tax'] ?? 0, $multiplier, 'tax total'),
-                'correlation_id' => 'woocommerce-order-' . $externalId,
+                'correlation_id' => $channel . '-order-' . $externalId,
             ],
             'payment' => $payment,
             'cancelled' => in_array($status, ['cancelled', 'failed'], true),

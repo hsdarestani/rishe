@@ -6,7 +6,7 @@ namespace Rishe\Infrastructure\WordPress;
 
 final class Capabilities
 {
-    private const VERSION = '2026080101';
+    private const VERSION = '2026080102';
 
     /** @var list<string> */
     private const ALL = [
@@ -16,6 +16,7 @@ final class Capabilities
         'rishe_manage_inventory',
         'rishe_manage_manufacturing',
         'rishe_manage_sales',
+        'rishe_sell_event',
         'rishe_manage_crm',
         'rishe_manage_treasury',
         'rishe_manage_procurement',
@@ -43,7 +44,7 @@ final class Capabilities
         ],
         'rishe_sales_marketing_manager' => [
             'title' => 'ریشه — مسئول فروش و بازاریابی',
-            'caps' => ['manage_rishe', 'rishe_view_reports', 'rishe_manage_sales', 'rishe_manage_crm', 'rishe_manage_analytics'],
+            'caps' => ['manage_rishe', 'rishe_view_reports', 'rishe_manage_sales', 'rishe_sell_event', 'rishe_manage_crm', 'rishe_manage_analytics'],
         ],
         'rishe_b2b_manager' => [
             'title' => 'ریشه — مسئول فروش B2B',
@@ -55,11 +56,15 @@ final class Capabilities
         ],
         'rishe_branch_supervisor' => [
             'title' => 'ریشه — سرپرست شعبه یا ایونت',
-            'caps' => ['manage_rishe', 'rishe_view_reports', 'rishe_manage_sales', 'rishe_manage_inventory'],
+            'caps' => ['manage_rishe', 'rishe_view_reports', 'rishe_manage_sales', 'rishe_sell_event', 'rishe_manage_inventory'],
         ],
         'rishe_cashier' => [
             'title' => 'ریشه — فروشنده یا صندوقدار',
-            'caps' => ['manage_rishe', 'rishe_manage_sales'],
+            'caps' => ['manage_rishe', 'rishe_manage_sales', 'rishe_sell_event'],
+        ],
+        'rishe_event_seller' => [
+            'title' => 'ریشه — فروشنده ایونت',
+            'caps' => ['rishe_sell_event'],
         ],
         'rishe_report_viewer' => [
             'title' => 'ریشه — مشاهده‌گر مدیریتی',

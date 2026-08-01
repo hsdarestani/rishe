@@ -6,6 +6,7 @@ on:
       - main
       - agent/rishe-v2-workflows
       - agent/fix-warehouse-and-buttons
+      - agent/accounting-approval-event-pwa
   pull_request:
     branches:
       - main
@@ -43,15 +44,30 @@ jobs:
         run: |
           php -l rishe.php
           php -l src/Plugin.php
+          php -l src/Infrastructure/Database/Migrator.php
+          php -l src/Infrastructure/Database/Migrations/CreateAccountingReviewAndEventSalesTables.php
           php -l src/Infrastructure/WordPress/AdminMenu.php
           php -l src/Infrastructure/WordPress/BusinessAdminPage.php
           php -l src/Infrastructure/WordPress/BusinessDialogCompatibility.php
           php -l src/Infrastructure/WordPress/BusinessRestApi.php
           php -l src/Infrastructure/WordPress/Capabilities.php
           php -l src/Infrastructure/WordPress/DefaultWarehouseProvisioner.php
+          php -l src/Accounting/Application/AccountingReviewService.php
+          php -l src/Accounting/Infrastructure/WordPress/AccountingApprovalRestApi.php
+          php -l src/Accounting/Infrastructure/WordPress/AccountingReviewAdminPage.php
+          php -l src/EventSales/Infrastructure/WordPress/EventSalesAdminPage.php
+          php -l src/EventSales/Infrastructure/WordPress/EventSalesPage.php
+          php -l src/EventSales/Infrastructure/WordPress/EventSalesRestApi.php
+          php -l src/WooCommerce/Application/WooCommerceOrderSync.php
+          php -l src/Sales/Infrastructure/WooCommerceOrderMapper.php
 
-      - name: Validate admin JavaScript
-        run: node --check assets/admin/business.js
+      - name: Validate JavaScript
+        run: |
+          node --check assets/admin/business.js
+          node --check assets/admin/accounting-review.js
+          node --check assets/admin/event-sales.js
+          node --check assets/event-app/app.js
+          node --check assets/event-app/sw.js
 
       - name: Build installable ZIP
         shell: bash

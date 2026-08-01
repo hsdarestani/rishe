@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rishe\Infrastructure\Database;
 
+use Rishe\Infrastructure\Database\Migrations\CreateAccountingReviewAndEventSalesTables;
 use Rishe\Infrastructure\Database\Migrations\CreateAccountingTables;
 use Rishe\Infrastructure\Database\Migrations\CreateAnalyticsTables;
 use Rishe\Infrastructure\Database\Migrations\CreateB2BTables;
@@ -63,6 +64,7 @@ final class Migrator
             new ProtectOperationsLedger(),
             new CreateAnalyticsTables(),
             new ProtectAnalyticsLedger(),
+            new CreateAccountingReviewAndEventSalesTables(),
         ];
     }
 

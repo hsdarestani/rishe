@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Rishe\Infrastructure\WordPress;
 
+use Rishe\Accounting\Infrastructure\WordPress\AccountingReviewAdminPage;
 use Rishe\Analytics\Infrastructure\WordPress\AnalyticsAdminPage;
+use Rishe\EventSales\Infrastructure\WordPress\EventSalesAdminPage;
 use Rishe\Operations\Infrastructure\WordPress\OperationsAdminPage;
 
 final class AdminMenu
@@ -13,17 +15,23 @@ final class AdminMenu
     private AnalyticsAdminPage $analytics;
     private ErpAdminPage $erp;
     private BusinessAdminPage $business;
+    private AccountingReviewAdminPage $accountingReview;
+    private EventSalesAdminPage $eventSales;
 
     public function __construct(
         ?OperationsAdminPage $operations = null,
         ?AnalyticsAdminPage $analytics = null,
         ?ErpAdminPage $erp = null,
-        ?BusinessAdminPage $business = null
+        ?BusinessAdminPage $business = null,
+        ?AccountingReviewAdminPage $accountingReview = null,
+        ?EventSalesAdminPage $eventSales = null
     ) {
         $this->operations = $operations ?? new OperationsAdminPage();
         $this->analytics = $analytics ?? new AnalyticsAdminPage();
         $this->erp = $erp ?? new ErpAdminPage();
         $this->business = $business ?? new BusinessAdminPage();
+        $this->accountingReview = $accountingReview ?? new AccountingReviewAdminPage();
+        $this->eventSales = $eventSales ?? new EventSalesAdminPage();
     }
 
     public function register(): void
@@ -33,6 +41,8 @@ final class AdminMenu
         $this->analytics->register();
         $this->erp->register();
         $this->business->register();
+        $this->accountingReview->register();
+        $this->eventSales->register();
     }
 
     public function addMenu(): void
@@ -59,20 +69,20 @@ final class AdminMenu
         $primary = [
             'rishe-work-inventory' => ['انبار و بسته‌بندی', 'rishe_manage_inventory'],
             'rishe-work-sales' => ['فروش و بازاریابی', 'rishe_manage_sales'],
+            'rishe-event-sales' => ['فروش ایونت', 'rishe_manage_sales'],
             'rishe-work-procurement' => ['بازرگانی و تأمین', 'rishe_manage_procurement'],
             'rishe-work-finance' => ['مالی و حسابداری', 'rishe_manage_accounting'],
+            'rishe-accounting-review' => ['کارتابل تأیید اسناد', 'rishe_manage_accounting'],
             'rishe-work-logistics' => ['لجستیک', 'rishe_manage_logistics'],
             'rishe-work-b2b' => ['فروش B2B', 'rishe_manage_b2b'],
         ];
         foreach ($primary as $slug => [$title, $capability]) {
-            add_submenu_page(
-                'rishe',
-                $title,
-                $title,
-                $capability,
-                $slug,
-                [$this->business, 'render']
-            );
+            $callback = match ($slug) {
+                EventSalesAdminPage::SLUG => [$this->eventSales, 'render'],
+                AccountingReviewAdminPage::SLUG => [$this->accountingReview, 'render'],
+                default => [$this->business, 'render'],
+            };
+            add_submenu_page('rishe', $title, $title, $capability, $slug, $callback);
         }
 
         add_submenu_page(
@@ -84,8 +94,6 @@ final class AdminMenu
             [$this->analytics, 'render']
         );
 
-        // صفحات تخصصی حفظ شده‌اند اما از منوی روزمره حذف شده‌اند؛
-        // کاربر فقط وقتی از داخل یک فلو روی «تنظیمات پیشرفته» می‌زند وارد آن‌ها می‌شود.
         foreach (ErpAdminPage::modules() as $slug => $module) {
             add_submenu_page(
                 null,

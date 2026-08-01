@@ -16,11 +16,16 @@ trait WooCommerceOrderSync
         if (!$this->enabled() || !(bool) $settings['sync_orders']) {
             return ['skipped' => true, 'reason' => 'disabled'];
         }
-        $this->assertWarehouse((int) $settings['warehouse_id']);
         $order = wc_get_order($orderId);
         if (!$order) {
             throw new RuntimeException('سفارش ووکامرس پیدا نشد.');
         }
+        if ((bool) $order->get_meta('_rishe_event_inventory_committed', true)) {
+            return ['skipped' => true, 'reason' => 'event_inventory_already_committed'];
+        }
+        $warehouseId = (int) $order->get_meta('_rishe_warehouse_id', true);
+        $warehouseId = $warehouseId > 0 ? $warehouseId : (int) $settings['warehouse_id'];
+        $this->assertWarehouse($warehouseId);
         if (self::$syncingOrder) {
             return ['skipped' => true, 'reason' => 'recursion'];
         }
@@ -38,7 +43,7 @@ trait WooCommerceOrderSync
                     $this->ensureMapping($product);
                 }
             }
-            $mapped = $this->orderMapper->map($this->orderPayload($order));
+            $mapped = $this->orderMapper->map($this->orderPayload($order, $warehouseId));
             $risheOrder = $this->sales->createOrder($mapped['order'], $this->actor());
             $status = (string) $risheOrder['status'];
             if ($mapped['cancelled'] && $status === 'pending_payment') {
@@ -56,7 +61,10 @@ trait WooCommerceOrderSync
             $order->update_meta_data('_rishe_last_sync', gmdate('c'));
             $order->delete_meta_data('_rishe_sync_error');
             $order->save_meta_data();
-            $this->rememberRun('sync_order', ['woocommerce_order_id' => $orderId, 'rishe_order_id' => (int) $risheOrder['id']]);
+            $this->rememberRun('sync_order', [
+                'woocommerce_order_id' => $orderId,
+                'rishe_order_id' => (int) $risheOrder['id'],
+            ]);
 
             return $risheOrder;
         } catch (Throwable $e) {
@@ -137,6 +145,9 @@ trait WooCommerceOrderSync
         $wcOrder = wc_get_order($orderId);
         if (!$wcOrder) {
             return ['status' => 'woocommerce_order_missing'];
+        }
+        if ((bool) $wcOrder->get_meta('_rishe_event_inventory_committed', true)) {
+            return ['status' => 'event_refund_requires_event_return'];
         }
         $total = (float) $wcOrder->get_total();
         $refunded = (float) $wcOrder->get_total_refunded();
@@ -254,7 +265,7 @@ trait WooCommerceOrderSync
     }
 
     /** @return array<string, mixed> */
-    private function orderPayload(object $order): array
+    private function orderPayload(object $order, ?int $warehouseId = null): array
     {
         $lines = [];
         foreach ($order->get_items('line_item') as $item) {
@@ -270,12 +281,15 @@ trait WooCommerceOrderSync
                 'total' => (string) $item->get_total(),
             ];
         }
+        $channel = sanitize_key((string) $order->get_meta('_rishe_sales_channel', true));
 
         return [
             'id' => (string) $order->get_id(),
             'status' => (string) $order->get_status(),
             'currency' => (string) $order->get_currency(),
             'customer_id' => (string) $order->get_customer_id(),
+            'warehouse_id' => $warehouseId,
+            'channel' => $channel !== '' ? $channel : 'woocommerce',
             'billing' => [
                 'phone' => $order->get_billing_phone(),
                 'first_name' => $order->get_billing_first_name() ?: 'مشتری',
