@@ -12,8 +12,9 @@ final class PersianLocalizationTest extends TestCase
     {
         $root = dirname(__DIR__, 3);
         $expectations = [
-            'rishe.php' => ['Plugin Name: ریشه', 'سامانه ریشه'],
-            'src/Infrastructure/WordPress/AdminMenu.php' => ['سامانه ریشه', 'مرکز عملیات', 'تحلیل و داشبورد'],
+            'rishe.php' => ['Plugin Name: ریشه', 'سیستم عملیاتی'],
+            'src/Infrastructure/WordPress/AdminMenu.php' => ['مرکز فرمان', 'انبار و بسته‌بندی', 'فروش و بازاریابی'],
+            'src/Infrastructure/WordPress/BusinessAdminPage.php' => ['سیستم عملیاتی کسب‌وکار ریشه', 'مرکز فرمان ریشه'],
             'src/Infrastructure/WordPress/ErpAdminPage.php' => ['محیط کاری سامانه ریشه', 'بخش‌های ماژول'],
             'src/Operations/Infrastructure/WordPress/OperationsAdminPage.php' => ['مرکز کنترل عملیات', 'کارهای پس‌زمینه'],
             'src/Analytics/Infrastructure/WordPress/AnalyticsAdminPage.php' => ['هوش مدیریتی', 'تحلیل‌های سامانه ریشه'],
@@ -44,7 +45,7 @@ final class PersianLocalizationTest extends TestCase
     {
         $plugin = file_get_contents(dirname(__DIR__, 3) . '/rishe.php');
         self::assertIsString($plugin);
-        self::assertStringContainsString('Version: 1.6.0', $plugin);
-        self::assertStringContainsString("define('RISHE_VERSION', '1.6.0');", $plugin);
+        self::assertStringContainsString('Version: 2.0.0', $plugin);
+        self::assertStringContainsString("define('RISHE_VERSION', '2.0.0');", $plugin);
     }
 }
