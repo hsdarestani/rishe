@@ -11,15 +11,11 @@
     <rule ref="PSR12">
         <exclude name="Generic.Files.LineLength.TooLong"/>
     </rule>
-    <rule ref="PSR12.ControlStructures.ControlStructureSpacing.SpacingAfterOpenBrace">
+    <rule ref="PSR12.ControlStructures.ControlStructureSpacing">
         <exclude-pattern>src/EventSales/Infrastructure/WordPress/EventSalesRestApi.php</exclude-pattern>
         <exclude-pattern>src/Accounting/Application/AccountingReviewService.php</exclude-pattern>
     </rule>
-    <rule ref="PSR12.ControlStructures.ControlStructureSpacing.SpacingBeforeCloseBrace">
-        <exclude-pattern>src/EventSales/Infrastructure/WordPress/EventSalesRestApi.php</exclude-pattern>
-        <exclude-pattern>src/Accounting/Application/AccountingReviewService.php</exclude-pattern>
-    </rule>
-    <rule ref="PSR12.Operators.OperatorSpacing.NoSpaceBefore">
+    <rule ref="PSR12.Operators.OperatorSpacing">
         <exclude-pattern>src/Accounting/Infrastructure/WordPress/AccountingApprovalRestApi.php</exclude-pattern>
     </rule>
 </ruleset>
