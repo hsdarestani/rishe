@@ -11,11 +11,14 @@ final class AccountingReviewAdminPage
     public function register(): void
     {
         add_action('admin_enqueue_scripts', [$this, 'assets']);
+        add_filter('parent_file', [$this, 'parentFile']);
+        add_filter('submenu_file', [$this, 'submenuFile']);
     }
 
     public function assets(string $hook): void
     {
-        if ($hook !== 'rishe_page_' . self::SLUG) {
+        unset($hook);
+        if (!$this->isCurrentPage()) {
             return;
         }
         wp_enqueue_style(
@@ -40,6 +43,16 @@ final class AccountingReviewAdminPage
         ]);
     }
 
+    public function parentFile(string $parentFile): string
+    {
+        return $this->isCurrentPage() ? 'rishe' : $parentFile;
+    }
+
+    public function submenuFile(?string $submenuFile): ?string
+    {
+        return $this->isCurrentPage() ? 'rishe-work-finance' : $submenuFile;
+    }
+
     public function render(): void
     {
         if (!current_user_can('rishe_manage_accounting') && !current_user_can('manage_rishe')) {
@@ -47,6 +60,10 @@ final class AccountingReviewAdminPage
         }
         ?>
         <div class="wrap rishe-review" id="rishe-accounting-review" dir="rtl" lang="fa">
+            <a class="rishe-review__back" href="<?php echo esc_url(admin_url('admin.php?page=rishe-work-finance')); ?>">
+                <span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
+                بازگشت به مالی و حسابداری
+            </a>
             <header class="rishe-review__hero">
                 <div>
                     <p>مالی و حسابداری ریشه</p>
@@ -92,5 +109,12 @@ final class AccountingReviewAdminPage
             </dialog>
         </div>
         <?php
+    }
+
+    private function isCurrentPage(): bool
+    {
+        $page = isset($_GET['page']) ? sanitize_key((string) wp_unslash($_GET['page'])) : '';
+
+        return $page === self::SLUG;
     }
 }
