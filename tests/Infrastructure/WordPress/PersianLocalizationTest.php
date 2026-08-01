@@ -79,12 +79,33 @@ final class PersianLocalizationTest extends TestCase
         self::assertStringContainsString("window.addEventListener('online'", $app);
     }
 
+    public function testNewToolsDoNotAddSeparateDailyMenuItems(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $menu = file_get_contents($root . '/src/Infrastructure/WordPress/AdminMenu.php');
+        $business = file_get_contents($root . '/src/Infrastructure/WordPress/BusinessAdminPage.php');
+        $accounting = file_get_contents(
+            $root . '/src/Accounting/Infrastructure/WordPress/AccountingReviewAdminPage.php'
+        );
+        $events = file_get_contents($root . '/src/EventSales/Infrastructure/WordPress/EventSalesAdminPage.php');
+
+        self::assertIsString($menu);
+        self::assertIsString($business);
+        self::assertIsString($accounting);
+        self::assertIsString($events);
+        self::assertStringNotContainsString("'rishe-event-sales' =>", $menu);
+        self::assertStringNotContainsString("'rishe-accounting-review' =>", $menu);
+        self::assertStringContainsString('renderWorkspaceEntry', $business);
+        self::assertStringContainsString("return \$this->isCurrentPage() ? 'rishe-work-finance'", $accounting);
+        self::assertStringContainsString("return \$this->isCurrentPage() ? 'rishe-work-sales'", $events);
+    }
+
     public function testPersianReleaseVersionIsConsistent(): void
     {
         $plugin = file_get_contents(dirname(__DIR__, 3) . '/rishe.php');
         self::assertIsString($plugin);
-        self::assertStringContainsString('Version: 2.1.0', $plugin);
-        self::assertStringContainsString("define('RISHE_VERSION', '2.1.0');", $plugin);
+        self::assertStringContainsString('Version: 2.1.1', $plugin);
+        self::assertStringContainsString("define('RISHE_VERSION', '2.1.1');", $plugin);
         self::assertStringContainsString("define('RISHE_DB_VERSION', '2026080102');", $plugin);
     }
 }
