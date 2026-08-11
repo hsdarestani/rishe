@@ -63,11 +63,10 @@
             body.innerHTML = `
                 <div class="rishe-cost-help">
                     <span class="dashicons dashicons-info-outline"></span>
-                    <div><strong>این عملیات تعداد کالا را تغییر نمی‌دهد.</strong><p>قیمت خرید موجودی فعلی را وارد کن. به‌صورت پیش‌فرض فقط موجودی‌های بدون بها اصلاح می‌شوند.</p></div>
+                    <div><strong>این عملیات تعداد کالا را تغییر نمی‌دهد.</strong><p>فقط برای موجودی‌های فعلی که هنوز بهای خرید ندارند قیمت وارد کن. خریدهای بعدی از بخش بازرگانی و تأمین قیمت می‌گیرند.</p></div>
                 </div>
                 <div class="rishe-cost-toolbar">
                     <input type="search" data-cost-search placeholder="جست‌وجوی کالا یا انبار…">
-                    <label><input type="checkbox" data-cost-replace> اصلاح بهای قبلی هم مجاز باشد</label>
                 </div>
                 <div class="rishe-cost-table-wrap">
                     <table class="rishe-cost-table">
@@ -76,12 +75,13 @@
                             ${rows.map(row => {
                                 const current = averageToman(row);
                                 const search = `${row.product_name || ''} ${row.sku || ''} ${row.warehouse_name || ''}`.toLowerCase();
+                                const locked = current > 0;
                                 return `<tr data-cost-row data-search="${esc(search)}">
                                     <td><strong>${esc(row.product_name)}</strong><small>${esc(row.sku || '')}</small></td>
                                     <td>${esc(row.warehouse_name)}</td>
                                     <td>${fa(row.on_hand)}</td>
-                                    <td>${current > 0 ? `<span class="rishe-cost-set">${toman(current)}</span>` : '<span class="rishe-cost-missing">ثبت نشده</span>'}</td>
-                                    <td><div class="rishe-cost-input"><input type="number" min="1" step="1" inputmode="numeric" value="${current || ''}" placeholder="مثلاً 600000" data-product="${Number(row.product_id)}" data-warehouse="${Number(row.warehouse_id)}" data-current="${current}"><span>تومان</span></div></td>
+                                    <td>${locked ? `<span class="rishe-cost-set">${toman(current)}</span>` : '<span class="rishe-cost-missing">ثبت نشده</span>'}</td>
+                                    <td><div class="rishe-cost-input"><input type="number" min="1" step="1" inputmode="numeric" value="${locked ? current : ''}" placeholder="مثلاً 600000" data-product="${Number(row.product_id)}" data-warehouse="${Number(row.warehouse_id)}" data-current="${current}" ${locked ? 'disabled title="این موجودی قبلاً بهاگذاری شده است"' : ''}><span>تومان</span></div></td>
                                 </tr>`;
                             }).join('')}
                         </tbody>
@@ -102,28 +102,23 @@
             body.querySelector('[data-cost-cancel]').addEventListener('click', () => modal.close());
             body.querySelector('[data-cost-save]').addEventListener('click', async event => {
                 const button = event.currentTarget;
-                const replace = body.querySelector('[data-cost-replace]').checked;
                 const resultBox = body.querySelector('[data-cost-result]');
-                const items = [...body.querySelectorAll('[data-cost-row]:not([hidden]) input[data-product]')]
+                const items = [...body.querySelectorAll('[data-cost-row]:not([hidden]) input[data-product]:not(:disabled)')]
                     .map(input => ({
                         product_id: Number(input.dataset.product),
                         warehouse_id: Number(input.dataset.warehouse),
-                        unit_cost_toman: Number(input.value || 0),
-                        current_toman: Number(input.dataset.current || 0)
+                        unit_cost_toman: Number(input.value || 0)
                     }))
-                    .filter(item => item.unit_cost_toman > 0 && (item.current_toman === 0 || replace))
+                    .filter(item => item.unit_cost_toman > 0)
                     .map(item => ({
                         product_id: item.product_id,
                         warehouse_id: item.warehouse_id,
-                        unit_cost_irr: Math.round(item.unit_cost_toman * 10),
-                        replace_existing: replace
+                        unit_cost_irr: Math.round(item.unit_cost_toman * 10)
                     }));
 
                 if (!items.length) {
                     resultBox.className = 'is-warning';
-                    resultBox.textContent = replace
-                        ? 'حداقل یک قیمت خرید وارد کن.'
-                        : 'برای کالاهای بدون بها قیمت وارد کن؛ برای اصلاح قیمت قبلی، گزینه «اصلاح بهای قبلی» را فعال کن.';
+                    resultBox.textContent = 'برای حداقل یک کالای بدون بها، قیمت خرید وارد کن.';
                     return;
                 }
 
