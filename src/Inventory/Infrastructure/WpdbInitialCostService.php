@@ -59,16 +59,15 @@ final class WpdbInitialCostService
         $productId = $this->positiveId($item['product_id'] ?? null, 'product_id');
         $warehouseId = $this->positiveId($item['warehouse_id'] ?? null, 'warehouse_id');
         $unitCost = $this->positiveMoney($item['unit_cost_irr'] ?? null);
-        $replace = (bool) ($item['replace_existing'] ?? false);
 
         $this->assertActive($wpdb->prefix . 'rishe_products', $productId, 'کالا');
         $this->assertActive($wpdb->prefix . 'rishe_warehouses', $warehouseId, 'انبار');
 
         $batches = $wpdb->prefix . 'rishe_inventory_batches';
-        $condition = $replace ? '' : ' AND unit_cost_irr = 0';
         $batchRows = $wpdb->get_results($wpdb->prepare(
             "SELECT id, quantity_on_hand, unit_cost_irr FROM {$batches}
-             WHERE product_id = %d AND warehouse_id = %d AND status = 'active' AND quantity_on_hand > 0{$condition}
+             WHERE product_id = %d AND warehouse_id = %d AND status = 'active'
+             AND quantity_on_hand > 0 AND unit_cost_irr = 0
              ORDER BY received_at, id FOR UPDATE",
             $productId,
             $warehouseId
@@ -89,12 +88,9 @@ final class WpdbInitialCostService
 
         $batchIds = [];
         $quantityScaled = 0;
-        $oldValue = 0;
         foreach ($batchRows as $row) {
             $batchIds[] = (int) $row['id'];
-            $quantity = (int) $row['quantity_on_hand'];
-            $quantityScaled += $quantity;
-            $oldValue += intdiv($quantity * (int) $row['unit_cost_irr'], Quantity::SCALE);
+            $quantityScaled += (int) $row['quantity_on_hand'];
         }
 
         $placeholders = implode(',', array_fill(0, count($batchIds), '%d'));
@@ -132,10 +128,9 @@ final class WpdbInitialCostService
                 'product_id' => $productId,
                 'warehouse_id' => $warehouseId,
                 'unit_cost_irr' => $unitCost,
-                'replace_existing' => $replace,
                 'batch_ids' => $batchIds,
                 'quantity_scaled' => $quantityScaled,
-                'old_value_irr' => $oldValue,
+                'old_value_irr' => 0,
                 'new_value_irr' => $newValue,
             ]
         );
@@ -146,7 +141,7 @@ final class WpdbInitialCostService
             'unit_cost_irr' => $unitCost,
             'affected_batches' => count($batchIds),
             'quantity' => Quantity::fromScaled($quantityScaled, true)->decimal(),
-            'old_value_irr' => $oldValue,
+            'old_value_irr' => 0,
             'new_value_irr' => $newValue,
         ];
     }
