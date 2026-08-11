@@ -100,12 +100,31 @@ final class PersianLocalizationTest extends TestCase
         self::assertStringContainsString("return \$this->isCurrentPage() ? 'rishe-work-sales'", $events);
     }
 
+    public function testInitialInventoryCostToolIsRegistered(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $plugin = file_get_contents($root . '/src/Plugin.php');
+        $api = file_get_contents($root . '/src/Inventory/Infrastructure/WordPress/InventoryRestApi.php');
+        $admin = file_get_contents($root . '/src/Inventory/Infrastructure/WordPress/InventoryInitialCostAdmin.php');
+        $script = file_get_contents($root . '/assets/admin/initial-cost.js');
+
+        self::assertIsString($plugin);
+        self::assertIsString($api);
+        self::assertIsString($admin);
+        self::assertIsString($script);
+        self::assertStringContainsString('InventoryInitialCostAdmin', $plugin);
+        self::assertStringContainsString('/inventory/initial-costs', $api);
+        self::assertStringContainsString('rishe-work-inventory', $admin);
+        self::assertStringContainsString('ثبت بهای اولیه', $script);
+        self::assertStringContainsString('این عملیات تعداد کالا را تغییر نمی‌دهد', $script);
+    }
+
     public function testPersianReleaseVersionIsConsistent(): void
     {
         $plugin = file_get_contents(dirname(__DIR__, 3) . '/rishe.php');
         self::assertIsString($plugin);
-        self::assertStringContainsString('Version: 2.1.1', $plugin);
-        self::assertStringContainsString("define('RISHE_VERSION', '2.1.1');", $plugin);
+        self::assertStringContainsString('Version: 2.1.2', $plugin);
+        self::assertStringContainsString("define('RISHE_VERSION', '2.1.2');", $plugin);
         self::assertStringContainsString("define('RISHE_DB_VERSION', '2026080102');", $plugin);
     }
 }

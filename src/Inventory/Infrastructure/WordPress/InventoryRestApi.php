@@ -8,6 +8,7 @@ use Rishe\Infrastructure\Database\TransactionManager;
 use Rishe\Inventory\Application\InventoryService;
 use Rishe\Inventory\Domain\Exception\InventoryDomainException;
 use Rishe\Inventory\Domain\FifoAllocator;
+use Rishe\Inventory\Infrastructure\WpdbInitialCostService;
 use Rishe\Inventory\Infrastructure\WpdbInventoryRepository;
 use Rishe\Shared\Audit\AuditLogger;
 use RuntimeException;
@@ -19,14 +20,18 @@ use WP_REST_Server;
 final class InventoryRestApi
 {
     private InventoryService $service;
+    private WpdbInitialCostService $initialCost;
 
-    public function __construct(?InventoryService $service = null)
-    {
+    public function __construct(
+        ?InventoryService $service = null,
+        ?WpdbInitialCostService $initialCost = null
+    ) {
         $this->service = $service ?? new InventoryService(
             new WpdbInventoryRepository(new FifoAllocator()),
             new TransactionManager(),
             new AuditLogger()
         );
+        $this->initialCost = $initialCost ?? new WpdbInitialCostService();
     }
 
     public function register(): void
@@ -52,6 +57,11 @@ final class InventoryRestApi
         register_rest_route('rishe/v1', '/inventory/receipts', [
             'methods' => WP_REST_Server::CREATABLE,
             'callback' => [$this, 'receiveStock'],
+            'permission_callback' => $manage,
+        ]);
+        register_rest_route('rishe/v1', '/inventory/initial-costs', [
+            'methods' => WP_REST_Server::CREATABLE,
+            'callback' => [$this, 'setInitialCosts'],
             'permission_callback' => $manage,
         ]);
         register_rest_route('rishe/v1', '/inventory/reservations', [
@@ -101,6 +111,19 @@ final class InventoryRestApi
         return $this->execute(fn (): array => [
             'batch_id' => $this->service->receiveStock($this->payload($request), get_current_user_id()),
         ], 201);
+    }
+
+    public function setInitialCosts(WP_REST_Request $request): WP_REST_Response
+    {
+        return $this->execute(function () use ($request): array {
+            $payload = $this->payload($request);
+            $items = $payload['items'] ?? null;
+            if (!is_array($items)) {
+                throw new InventoryDomainException('لیست کالاها برای ثبت بهای اولیه الزامی است.');
+            }
+
+            return $this->initialCost->apply($items);
+        });
     }
 
     public function reserveStock(WP_REST_Request $request): WP_REST_Response

@@ -21,6 +21,7 @@ use Rishe\Infrastructure\WordPress\DefaultWarehouseProvisioner;
 use Rishe\Infrastructure\WordPress\PersianAdminLocalization;
 use Rishe\Infrastructure\WordPress\RestApi;
 use Rishe\Infrastructure\WordPress\TemporaryFinancialRestApi;
+use Rishe\Inventory\Infrastructure\WordPress\InventoryInitialCostAdmin;
 use Rishe\Inventory\Infrastructure\WordPress\InventoryRestApi;
 use Rishe\Logistics\Infrastructure\WordPress\LogisticsRestApi;
 use Rishe\Manufacturing\Infrastructure\WordPress\ManufacturingRestApi;
@@ -49,6 +50,7 @@ final class Plugin
         (new BusinessDialogCompatibility())->register();
         (new PersianAdminLocalization())->register();
         (new EventSalesPage())->register();
+        (new InventoryInitialCostAdmin())->register();
         (new RestApi())->register();
         (new BusinessRestApi())->register();
         (new TemporaryFinancialRestApi())->register();
