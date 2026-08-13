@@ -73,7 +73,7 @@ final class RestrictedAdminShell
 
     public function enqueueReadOnlyAssets(): void
     {
-        if (!$this->isReportOnly()) {
+        if (!$this->isRestricted()) {
             return;
         }
 
@@ -83,6 +83,11 @@ final class RestrictedAdminShell
             [],
             RISHE_VERSION
         );
+
+        if (!$this->isReportOnly()) {
+            return;
+        }
+
         wp_enqueue_script(
             'rishe-read-only-access',
             RISHE_URL . 'assets/admin/read-only-access.js',
@@ -104,6 +109,8 @@ final class RestrictedAdminShell
         $classes .= ' rishe-restricted-admin';
         if ($this->isReportOnly()) {
             $classes .= ' rishe-report-only';
+        } elseif (current_user_can('rishe_manage_accounting')) {
+            $classes .= ' rishe-finance-only';
         }
 
         return trim($classes);
