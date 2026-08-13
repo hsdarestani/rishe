@@ -10,6 +10,7 @@ use Rishe\Analytics\Infrastructure\WordPress\AnalyticsRestApi;
 use Rishe\Analytics\Infrastructure\WordPress\AnalyticsRuntime;
 use Rishe\B2B\Infrastructure\WordPress\B2BRestApi;
 use Rishe\Deployment\Infrastructure\WordPress\RisheCliRegistrar;
+use Rishe\EventSales\Infrastructure\WordPress\EventCustomerSyncRuntime;
 use Rishe\EventSales\Infrastructure\WordPress\EventSalesPage;
 use Rishe\EventSales\Infrastructure\WordPress\EventSalesRestApi;
 use Rishe\Infrastructure\Database\Migrator;
@@ -53,6 +54,7 @@ final class Plugin
         (new BusinessDialogCompatibility())->register();
         (new PersianAdminLocalization())->register();
         (new EventSalesPage())->register();
+        (new EventCustomerSyncRuntime())->register();
         (new InventoryInitialCostAdmin())->register();
         (new RestApi())->register();
         (new BusinessRestApi())->register();
