@@ -137,23 +137,51 @@ final class PersianLocalizationTest extends TestCase
         self::assertIsString($plugin);
         self::assertIsString($guard);
         self::assertStringContainsString('ریشه — فقط گزارش همه بخش‌ها', $caps);
-        self::assertStringContainsString('ریشه — مالی و حسابداری کامل', $caps);
+        self::assertStringContainsString('ریشه — حاج یوسف', $caps);
         self::assertStringContainsString('rishe_view_all_sections', $caps);
+        self::assertStringContainsString('rishe_view_sales_dashboard', $caps);
+        self::assertStringContainsString('rishe_view_customers', $caps);
+        self::assertStringContainsString('rishe_manage_sales_targets', $caps);
         self::assertStringContainsString('rishe_restricted_admin', $caps);
         self::assertStringContainsString('RestrictedAdminShell', $plugin);
         self::assertStringContainsString("\$slug !== 'rishe'", $shell);
         self::assertStringContainsString('rishe-work-finance', $shell);
+        self::assertStringContainsString('rishe-sales-insights', $shell);
         self::assertStringContainsString("'rishe_access_app'", $menu);
         self::assertStringContainsString('حالت فقط گزارش', $business);
         self::assertStringContainsString("!['GET', 'HEAD', 'OPTIONS'].includes(method)", $guard);
+    }
+
+    public function testSalesIntelligenceAndEventCustomerLinkerAreRegistered(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $plugin = file_get_contents($root . '/src/Plugin.php');
+        $api = file_get_contents($root . '/src/Sales/Infrastructure/WordPress/SalesInsightsRestApi.php');
+        $page = file_get_contents($root . '/src/Sales/Infrastructure/WordPress/SalesInsightsAdminPage.php');
+        $customer = file_get_contents($root . '/src/EventSales/Infrastructure/WordPress/EventCustomerSyncRuntime.php');
+        $script = file_get_contents($root . '/assets/admin/sales-insights.js');
+
+        self::assertIsString($plugin);
+        self::assertIsString($api);
+        self::assertIsString($page);
+        self::assertIsString($customer);
+        self::assertIsString($script);
+        self::assertStringContainsString('SalesInsightsRestApi', $plugin);
+        self::assertStringContainsString('EventCustomerSyncRuntime', $plugin);
+        self::assertStringContainsString('/sales-intelligence/report', $api);
+        self::assertStringContainsString('/sales-intelligence/customers', $api);
+        self::assertStringContainsString('rishe_monthly_sales_targets_irr', $api);
+        self::assertStringContainsString('گزارش فروش و دیتابیس مشتریان', $page);
+        self::assertStringContainsString('_rishe_event_customer_linked', $customer);
+        self::assertStringContainsString('انحراف از تارگت', $script);
     }
 
     public function testPersianReleaseVersionIsConsistent(): void
     {
         $plugin = file_get_contents(dirname(__DIR__, 3) . '/rishe.php');
         self::assertIsString($plugin);
-        self::assertStringContainsString('Version: 2.1.3', $plugin);
-        self::assertStringContainsString("define('RISHE_VERSION', '2.1.3');", $plugin);
+        self::assertStringContainsString('Version: 2.2.0', $plugin);
+        self::assertStringContainsString("define('RISHE_VERSION', '2.2.0');", $plugin);
         self::assertStringContainsString("define('RISHE_DB_VERSION', '2026080102');", $plugin);
     }
 }
