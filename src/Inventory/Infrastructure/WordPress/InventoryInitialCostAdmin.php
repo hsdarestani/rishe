@@ -14,7 +14,7 @@ final class InventoryInitialCostAdmin
     public function assets(): void
     {
         $page = isset($_GET['page']) ? sanitize_key((string) wp_unslash($_GET['page'])) : '';
-        if ($page !== 'rishe-work-inventory') {
+        if ($page !== 'rishe-work-inventory' || !current_user_can('rishe_manage_inventory')) {
             return;
         }
 
