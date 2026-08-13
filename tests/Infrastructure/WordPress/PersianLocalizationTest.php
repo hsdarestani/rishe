@@ -115,16 +115,45 @@ final class PersianLocalizationTest extends TestCase
         self::assertStringContainsString('InventoryInitialCostAdmin', $plugin);
         self::assertStringContainsString('/inventory/initial-costs', $api);
         self::assertStringContainsString('rishe-work-inventory', $admin);
+        self::assertStringContainsString("current_user_can('rishe_manage_inventory')", $admin);
         self::assertStringContainsString('ثبت بهای اولیه', $script);
         self::assertStringContainsString('این عملیات تعداد کالا را تغییر نمی‌دهد', $script);
+    }
+
+    public function testRestrictedReportAndFinanceProfilesAreRegistered(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $caps = file_get_contents($root . '/src/Infrastructure/WordPress/Capabilities.php');
+        $shell = file_get_contents($root . '/src/Infrastructure/WordPress/RestrictedAdminShell.php');
+        $menu = file_get_contents($root . '/src/Infrastructure/WordPress/AdminMenu.php');
+        $business = file_get_contents($root . '/src/Infrastructure/WordPress/BusinessAdminPage.php');
+        $plugin = file_get_contents($root . '/src/Plugin.php');
+        $guard = file_get_contents($root . '/assets/admin/read-only-access.js');
+
+        self::assertIsString($caps);
+        self::assertIsString($shell);
+        self::assertIsString($menu);
+        self::assertIsString($business);
+        self::assertIsString($plugin);
+        self::assertIsString($guard);
+        self::assertStringContainsString('ریشه — فقط گزارش همه بخش‌ها', $caps);
+        self::assertStringContainsString('ریشه — مالی و حسابداری کامل', $caps);
+        self::assertStringContainsString('rishe_view_all_sections', $caps);
+        self::assertStringContainsString('rishe_restricted_admin', $caps);
+        self::assertStringContainsString('RestrictedAdminShell', $plugin);
+        self::assertStringContainsString("$slug !== 'rishe'", $shell);
+        self::assertStringContainsString('rishe-work-finance', $shell);
+        self::assertStringContainsString("'rishe_access_app'", $menu);
+        self::assertStringContainsString('حالت فقط گزارش', $business);
+        self::assertStringContainsString("!['GET', 'HEAD', 'OPTIONS'].includes(method)", $guard);
     }
 
     public function testPersianReleaseVersionIsConsistent(): void
     {
         $plugin = file_get_contents(dirname(__DIR__, 3) . '/rishe.php');
         self::assertIsString($plugin);
-        self::assertStringContainsString('Version: 2.1.2', $plugin);
-        self::assertStringContainsString("define('RISHE_VERSION', '2.1.2');", $plugin);
+        self::assertStringContainsString('Version: 2.1.3', $plugin);
+        self::assertStringContainsString("define('RISHE_VERSION', '2.1.3');", $plugin);
         self::assertStringContainsString("define('RISHE_DB_VERSION', '2026080102');", $plugin);
     }
 }
