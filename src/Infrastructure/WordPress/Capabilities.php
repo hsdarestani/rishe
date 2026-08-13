@@ -133,6 +133,7 @@ final class Capabilities
                 continue;
             }
 
+            self::renameRole($slug, $definition['title']);
             foreach (self::ALL as $capability) {
                 $role->remove_cap($capability);
             }
@@ -145,5 +146,22 @@ final class Capabilities
         }
 
         update_option('rishe_capabilities_version', self::VERSION, true);
+    }
+
+    private static function renameRole(string $slug, string $title): void
+    {
+        $roles = wp_roles();
+        if (!isset($roles->roles[$slug])) {
+            return;
+        }
+        if (($roles->roles[$slug]['name'] ?? '') === $title) {
+            return;
+        }
+
+        $roles->roles[$slug]['name'] = $title;
+        $roles->role_names[$slug] = $title;
+        if ($roles->use_db) {
+            update_option($roles->role_key, $roles->roles);
+        }
     }
 }
