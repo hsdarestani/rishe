@@ -6,6 +6,7 @@ namespace Rishe\Infrastructure\WordPress;
 
 use Rishe\Accounting\Infrastructure\WordPress\AccountingReviewAdminPage;
 use Rishe\EventSales\Infrastructure\WordPress\EventSalesAdminPage;
+use Rishe\Sales\Infrastructure\WordPress\SalesInsightsAdminPage;
 
 final class BusinessAdminPage
 {
@@ -102,6 +103,7 @@ final class BusinessAdminPage
                 'finance' => admin_url('admin.php?page=rishe-work-finance'),
                 'logistics' => admin_url('admin.php?page=rishe-work-logistics'),
                 'b2b' => admin_url('admin.php?page=rishe-work-b2b'),
+                'salesInsights' => admin_url('admin.php?page=' . SalesInsightsAdminPage::SLUG),
                 'wooOrders' => admin_url('admin.php?page=wc-orders'),
                 'wooProducts' => admin_url('edit.php?post_type=product'),
                 'wooCustomers' => admin_url('admin.php?page=wc-admin&path=/customers'),
@@ -126,6 +128,8 @@ final class BusinessAdminPage
                 'logistics' => current_user_can('rishe_manage_logistics'),
                 'b2b' => current_user_can('rishe_manage_b2b'),
                 'reports' => current_user_can('rishe_view_reports'),
+                'salesInsights' => current_user_can('rishe_view_sales_dashboard'),
+                'customers' => current_user_can('rishe_view_customers'),
                 'viewAllSections' => current_user_can('rishe_view_all_sections'),
             ],
         ]);
@@ -221,6 +225,24 @@ final class BusinessAdminPage
                 </div>
                 <a class="rishe-button rishe-button--light" href="<?php echo esc_url(admin_url('admin.php?page=' . AccountingReviewAdminPage::SLUG)); ?>">
                     ورود به کارتابل
+                </a>
+            </section>
+            <?php
+        }
+
+        if (
+            in_array($page, ['rishe-work-finance', 'rishe-work-sales'], true)
+            && current_user_can('rishe_view_sales_dashboard')
+        ) {
+            ?>
+            <section class="rishe-source is-connected">
+                <span class="dashicons dashicons-chart-area" aria-hidden="true"></span>
+                <div>
+                    <strong>گزارش فروش، تارگت و دیتابیس مشتریان</strong>
+                    <p>جزئیات همه کانال‌ها، فیلترهای فروش، انحراف از تارگت ماهانه و پروفایل تجمیعی مشتریان.</p>
+                </div>
+                <a class="rishe-button" href="<?php echo esc_url(admin_url('admin.php?page=' . SalesInsightsAdminPage::SLUG)); ?>">
+                    ورود به گزارش فروش
                 </a>
             </section>
             <?php

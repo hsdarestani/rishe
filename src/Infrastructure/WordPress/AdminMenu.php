@@ -8,6 +8,7 @@ use Rishe\Accounting\Infrastructure\WordPress\AccountingReviewAdminPage;
 use Rishe\Analytics\Infrastructure\WordPress\AnalyticsAdminPage;
 use Rishe\EventSales\Infrastructure\WordPress\EventSalesAdminPage;
 use Rishe\Operations\Infrastructure\WordPress\OperationsAdminPage;
+use Rishe\Sales\Infrastructure\WordPress\SalesInsightsAdminPage;
 
 final class AdminMenu
 {
@@ -17,6 +18,7 @@ final class AdminMenu
     private BusinessAdminPage $business;
     private AccountingReviewAdminPage $accountingReview;
     private EventSalesAdminPage $eventSales;
+    private SalesInsightsAdminPage $salesInsights;
 
     public function __construct(
         ?OperationsAdminPage $operations = null,
@@ -24,7 +26,8 @@ final class AdminMenu
         ?ErpAdminPage $erp = null,
         ?BusinessAdminPage $business = null,
         ?AccountingReviewAdminPage $accountingReview = null,
-        ?EventSalesAdminPage $eventSales = null
+        ?EventSalesAdminPage $eventSales = null,
+        ?SalesInsightsAdminPage $salesInsights = null
     ) {
         $this->operations = $operations ?? new OperationsAdminPage();
         $this->analytics = $analytics ?? new AnalyticsAdminPage();
@@ -32,6 +35,7 @@ final class AdminMenu
         $this->business = $business ?? new BusinessAdminPage();
         $this->accountingReview = $accountingReview ?? new AccountingReviewAdminPage();
         $this->eventSales = $eventSales ?? new EventSalesAdminPage();
+        $this->salesInsights = $salesInsights ?? new SalesInsightsAdminPage();
     }
 
     public function register(): void
@@ -43,6 +47,7 @@ final class AdminMenu
         $this->business->register();
         $this->accountingReview->register();
         $this->eventSales->register();
+        $this->salesInsights->register();
     }
 
     public function addMenu(): void
@@ -91,7 +96,7 @@ final class AdminMenu
             );
         }
 
-        // این دو صفحه از فضای کاری فروش و حسابداری باز می‌شوند و منوی جدا ندارند.
+        // ابزارهای روزمره از داخل فضای کاری مرتبط باز می‌شوند و منوی جدا ندارند.
         add_submenu_page(
             null,
             __('کارتابل تأیید اسناد', 'rishe'),
@@ -107,6 +112,14 @@ final class AdminMenu
             'rishe_manage_sales',
             EventSalesAdminPage::SLUG,
             [$this->eventSales, 'render']
+        );
+        add_submenu_page(
+            null,
+            __('گزارش فروش و مشتریان', 'rishe'),
+            __('گزارش فروش و مشتریان', 'rishe'),
+            'rishe_view_sales_dashboard',
+            SalesInsightsAdminPage::SLUG,
+            [$this->salesInsights, 'render']
         );
 
         if ($this->canSeeAnalytics()) {

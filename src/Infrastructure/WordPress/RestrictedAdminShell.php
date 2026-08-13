@@ -158,6 +158,7 @@ final class RestrictedAdminShell
                 'rishe-accounting',
                 'rishe-treasury',
                 'rishe-tax',
+                'rishe-sales-insights',
             ];
         }
 
