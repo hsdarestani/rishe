@@ -109,11 +109,11 @@ final class RestrictedAdminShell
         return trim($classes);
     }
 
-    public function loginRedirect(string $redirectTo, string $requestedRedirectTo, WP_User $user): string
+    public function loginRedirect(string $redirectTo, string $requestedRedirectTo, mixed $user): string
     {
         unset($requestedRedirectTo);
 
-        if (!$user->exists() || !$user->has_cap('rishe_restricted_admin')) {
+        if (!$user instanceof WP_User || !$user->exists() || !$user->has_cap('rishe_restricted_admin')) {
             return $redirectTo;
         }
 
