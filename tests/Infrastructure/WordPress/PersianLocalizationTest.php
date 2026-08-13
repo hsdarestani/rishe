@@ -141,7 +141,7 @@ final class PersianLocalizationTest extends TestCase
         self::assertStringContainsString('rishe_view_all_sections', $caps);
         self::assertStringContainsString('rishe_restricted_admin', $caps);
         self::assertStringContainsString('RestrictedAdminShell', $plugin);
-        self::assertStringContainsString("$slug !== 'rishe'", $shell);
+        self::assertStringContainsString("\$slug !== 'rishe'", $shell);
         self::assertStringContainsString('rishe-work-finance', $shell);
         self::assertStringContainsString("'rishe_access_app'", $menu);
         self::assertStringContainsString('حالت فقط گزارش', $business);
