@@ -50,21 +50,23 @@ final class AdminMenu
         add_menu_page(
             __('ریشه', 'rishe'),
             __('ریشه', 'rishe'),
-            'manage_rishe',
+            'rishe_access_app',
             'rishe',
             [$this->business, 'render'],
             'dashicons-palmtree',
             56
         );
 
-        add_submenu_page(
-            'rishe',
-            __('مرکز فرمان ریشه', 'rishe'),
-            __('مرکز فرمان', 'rishe'),
-            'manage_rishe',
-            'rishe',
-            [$this->business, 'render']
-        );
+        if ($this->canSeeDashboard()) {
+            add_submenu_page(
+                'rishe',
+                __('مرکز فرمان ریشه', 'rishe'),
+                __('مرکز فرمان', 'rishe'),
+                'rishe_access_app',
+                'rishe',
+                [$this->business, 'render']
+            );
+        }
 
         $primary = [
             'rishe-work-inventory' => ['انبار و بسته‌بندی', 'rishe_manage_inventory'],
@@ -75,11 +77,15 @@ final class AdminMenu
             'rishe-work-b2b' => ['فروش B2B', 'rishe_manage_b2b'],
         ];
         foreach ($primary as $slug => [$title, $capability]) {
+            if (!$this->canSeeSection($capability)) {
+                continue;
+            }
+
             add_submenu_page(
                 'rishe',
                 $title,
                 $title,
-                $capability,
+                'rishe_access_app',
                 $slug,
                 [$this->business, 'render']
             );
@@ -103,14 +109,16 @@ final class AdminMenu
             [$this->eventSales, 'render']
         );
 
-        add_submenu_page(
-            'rishe',
-            __('گزارش‌های مدیریتی', 'rishe'),
-            __('گزارش‌های مدیریتی', 'rishe'),
-            'rishe_view_reports',
-            'rishe-analytics',
-            [$this->analytics, 'render']
-        );
+        if ($this->canSeeAnalytics()) {
+            add_submenu_page(
+                'rishe',
+                __('گزارش‌های مدیریتی', 'rishe'),
+                __('گزارش‌های مدیریتی', 'rishe'),
+                'rishe_view_reports',
+                'rishe-analytics',
+                [$this->analytics, 'render']
+            );
+        }
 
         foreach (ErpAdminPage::modules() as $slug => $module) {
             add_submenu_page(
@@ -131,5 +139,28 @@ final class AdminMenu
             'rishe-operations',
             [$this->operations, 'render']
         );
+    }
+
+    private function canSeeDashboard(): bool
+    {
+        if (current_user_can('manage_rishe') || current_user_can('rishe_view_all_sections')) {
+            return true;
+        }
+
+        return !current_user_can('rishe_restricted_admin');
+    }
+
+    private function canSeeSection(string $capability): bool
+    {
+        return current_user_can('manage_rishe')
+            || current_user_can('rishe_view_all_sections')
+            || current_user_can($capability);
+    }
+
+    private function canSeeAnalytics(): bool
+    {
+        return current_user_can('manage_rishe')
+            || current_user_can('rishe_view_all_sections')
+            || current_user_can('rishe_manage_analytics');
     }
 }
