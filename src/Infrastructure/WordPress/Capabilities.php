@@ -6,7 +6,7 @@ namespace Rishe\Infrastructure\WordPress;
 
 final class Capabilities
 {
-    private const VERSION = '2026081301';
+    private const VERSION = '2026081302';
 
     /** @var list<string> */
     private const ALL = [
@@ -14,6 +14,9 @@ final class Capabilities
         'rishe_access_app',
         'rishe_view_reports',
         'rishe_view_all_sections',
+        'rishe_view_sales_dashboard',
+        'rishe_view_customers',
+        'rishe_manage_sales_targets',
         'rishe_manage_accounting',
         'rishe_manage_inventory',
         'rishe_manage_manufacturing',
@@ -35,10 +38,13 @@ final class Capabilities
     /** @var array<string, array{title:string,caps:list<string>}> */
     private const ROLE_PRESETS = [
         'rishe_finance_manager' => [
-            'title' => 'ریشه — مالی و حسابداری کامل',
+            'title' => 'ریشه — حاج یوسف',
             'caps' => [
                 'rishe_access_app',
                 'rishe_view_reports',
+                'rishe_view_sales_dashboard',
+                'rishe_view_customers',
+                'rishe_manage_sales_targets',
                 'rishe_manage_accounting',
                 'rishe_manage_treasury',
                 'rishe_manage_tax',
@@ -55,7 +61,17 @@ final class Capabilities
         ],
         'rishe_sales_marketing_manager' => [
             'title' => 'ریشه — مسئول فروش و بازاریابی',
-            'caps' => ['rishe_access_app', 'rishe_view_reports', 'rishe_manage_sales', 'rishe_sell_event', 'rishe_manage_crm', 'rishe_manage_analytics'],
+            'caps' => [
+                'rishe_access_app',
+                'rishe_view_reports',
+                'rishe_view_sales_dashboard',
+                'rishe_view_customers',
+                'rishe_manage_sales_targets',
+                'rishe_manage_sales',
+                'rishe_sell_event',
+                'rishe_manage_crm',
+                'rishe_manage_analytics',
+            ],
         ],
         'rishe_b2b_manager' => [
             'title' => 'ریشه — مسئول فروش B2B',
