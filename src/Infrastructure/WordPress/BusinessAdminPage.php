@@ -15,7 +15,7 @@ final class BusinessAdminPage
             'section' => 'dashboard',
             'title' => 'مرکز فرمان ریشه',
             'description' => 'تصویر امروز کسب‌وکار، کارهای منتظر اقدام و وضعیت کانال‌های فروش.',
-            'capability' => 'manage_rishe',
+            'capability' => 'rishe_access_app',
         ],
         'rishe-work-inventory' => [
             'section' => 'inventory',
@@ -93,6 +93,7 @@ final class BusinessAdminPage
             'version' => RISHE_VERSION,
             'woocommerceActive' => class_exists('WooCommerce'),
             'currency' => 'تومان',
+            'readOnly' => $this->isReadOnlyViewer(),
             'links' => [
                 'dashboard' => admin_url('admin.php?page=rishe'),
                 'inventory' => admin_url('admin.php?page=rishe-work-inventory'),
@@ -125,6 +126,7 @@ final class BusinessAdminPage
                 'logistics' => current_user_can('rishe_manage_logistics'),
                 'b2b' => current_user_can('rishe_manage_b2b'),
                 'reports' => current_user_can('rishe_view_reports'),
+                'viewAllSections' => current_user_can('rishe_view_all_sections'),
             ],
         ]);
     }
@@ -133,11 +135,15 @@ final class BusinessAdminPage
     {
         $page = $this->currentPage();
         $definition = self::PAGES[$page] ?? self::PAGES['rishe'];
-        if (!current_user_can($definition['capability']) && !current_user_can('manage_rishe')) {
+        if (
+            !current_user_can($definition['capability'])
+            && !current_user_can('rishe_view_all_sections')
+            && !current_user_can('manage_rishe')
+        ) {
             wp_die(esc_html__('شما اجازه دسترسی به این بخش از ریشه را ندارید.', 'rishe'));
         }
         ?>
-        <div class="wrap rishe-business" id="rishe-business-app" dir="rtl" lang="fa">
+        <div class="wrap rishe-business<?php echo $this->isReadOnlyViewer() ? ' is-read-only' : ''; ?>" id="rishe-business-app" dir="rtl" lang="fa">
             <header class="rishe-business__header">
                 <div class="rishe-business__brand">
                     <span class="rishe-business__mark" aria-hidden="true">
@@ -167,6 +173,16 @@ final class BusinessAdminPage
                 <?php endforeach; ?>
             </nav>
 
+            <?php if ($this->isReadOnlyViewer()) : ?>
+                <section class="rishe-source is-connected rishe-read-only-notice">
+                    <span class="dashicons dashicons-visibility" aria-hidden="true"></span>
+                    <div>
+                        <strong>حالت فقط گزارش</strong>
+                        <p>تمام بخش‌ها قابل مشاهده‌اند؛ ثبت، ویرایش، تأیید و حذف برای این حساب غیرفعال است.</p>
+                    </div>
+                </section>
+            <?php endif; ?>
+
             <?php $this->renderWorkspaceEntry($page); ?>
 
             <div class="rishe-business__notice hidden" data-rishe-notice></div>
@@ -195,7 +211,7 @@ final class BusinessAdminPage
 
     private function renderWorkspaceEntry(string $page): void
     {
-        if ($page === 'rishe-work-finance') {
+        if ($page === 'rishe-work-finance' && current_user_can('rishe_manage_accounting')) {
             ?>
             <section class="rishe-source is-connected">
                 <span class="dashicons dashicons-yes-alt" aria-hidden="true"></span>
@@ -210,7 +226,7 @@ final class BusinessAdminPage
             <?php
         }
 
-        if ($page === 'rishe-work-sales') {
+        if ($page === 'rishe-work-sales' && current_user_can('rishe_manage_sales')) {
             ?>
             <section class="rishe-source is-warning">
                 <span class="dashicons dashicons-store" aria-hidden="true"></span>
@@ -230,7 +246,7 @@ final class BusinessAdminPage
     private function navigation(): array
     {
         return [
-            'rishe' => ['label' => 'مرکز فرمان', 'icon' => 'dashicons-dashboard', 'capability' => 'manage_rishe'],
+            'rishe' => ['label' => 'مرکز فرمان', 'icon' => 'dashicons-dashboard', 'capability' => 'rishe_access_app'],
             'rishe-work-inventory' => ['label' => 'انبار', 'icon' => 'dashicons-archive', 'capability' => 'rishe_manage_inventory'],
             'rishe-work-sales' => ['label' => 'فروش و بازاریابی', 'icon' => 'dashicons-chart-line', 'capability' => 'rishe_manage_sales'],
             'rishe-work-procurement' => ['label' => 'بازرگانی و تأمین', 'icon' => 'dashicons-store', 'capability' => 'rishe_manage_procurement'],
@@ -242,7 +258,14 @@ final class BusinessAdminPage
 
     private function canAccess(string $capability): bool
     {
-        return current_user_can('manage_rishe') || current_user_can($capability);
+        return current_user_can('manage_rishe')
+            || current_user_can('rishe_view_all_sections')
+            || current_user_can($capability);
+    }
+
+    private function isReadOnlyViewer(): bool
+    {
+        return current_user_can('rishe_view_all_sections') && !current_user_can('manage_rishe');
     }
 
     private function currentPage(): string
