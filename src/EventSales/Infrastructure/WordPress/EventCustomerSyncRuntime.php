@@ -24,6 +24,9 @@ final class EventCustomerSyncRuntime
         if ((int) $order->get_customer_id() > 0) {
             return;
         }
+        if ((int) $order->get_meta('_rishe_event_sale_id', true) < 1) {
+            return;
+        }
         $channel = sanitize_key((string) $order->get_meta('_rishe_sales_channel', true));
         if ($channel !== 'event' && (string) $order->get_created_via() !== 'rishe-event-app') {
             return;
