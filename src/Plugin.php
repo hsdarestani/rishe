@@ -29,6 +29,7 @@ use Rishe\Manufacturing\Infrastructure\WordPress\ManufacturingRestApi;
 use Rishe\Operations\Infrastructure\WordPress\OperationsRestApi;
 use Rishe\Operations\Infrastructure\WordPress\OperationsRuntime;
 use Rishe\Procurement\Infrastructure\WordPress\ProcurementRestApi;
+use Rishe\Sales\Infrastructure\WordPress\SalesInsightsRestApi;
 use Rishe\Sales\Infrastructure\WordPress\SalesRestApi;
 use Rishe\Tax\Infrastructure\WordPress\TaxRestApi;
 use Rishe\Treasury\Infrastructure\WordPress\TreasuryRestApi;
@@ -62,6 +63,7 @@ final class Plugin
         (new InventoryRestApi())->register();
         (new ManufacturingRestApi())->register();
         (new SalesRestApi())->register();
+        (new SalesInsightsRestApi())->register();
         (new TreasuryRestApi())->register();
         (new ProcurementRestApi())->register();
         (new B2BRestApi())->register();
