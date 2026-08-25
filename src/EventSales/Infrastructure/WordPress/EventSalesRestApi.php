@@ -372,10 +372,7 @@ final class EventSalesRestApi
         }
         $normalized = $this->normalizeLines($rawLines);
         $subtotal = array_sum(array_column($normalized, 'line_total_irr'));
-        $discount = $this->money($data['discount_irr'] ?? 0, 'تخفیف', 0);
-        if ($discount > $subtotal) {
-            throw new RuntimeException('تخفیف نمی‌تواند بیشتر از جمع کالاها باشد.');
-        }
+        $discount = 0;
         $total = $subtotal - $discount;
         if ($total < 1) {
             throw new RuntimeException('مبلغ نهایی فروش باید بیشتر از صفر باشد.');
@@ -385,15 +382,12 @@ final class EventSalesRestApi
             throw new RuntimeException('مبلغ پرداختی نمی‌تواند بیشتر از مبلغ نهایی باشد.');
         }
         $paymentMethod = sanitize_key((string) ($data['payment_method'] ?? 'cash'));
-        if (!in_array($paymentMethod, ['cash', 'pos', 'card', 'transfer', 'credit', 'mixed', 'other'], true)) {
+        if (!in_array($paymentMethod, ['cash', 'pos', 'card'], true)) {
             throw new RuntimeException('روش پرداخت معتبر نیست.');
         }
         $occurredAt = $this->dateTime($data['occurred_at'] ?? gmdate('Y-m-d H:i:s'), 'زمان فروش');
         $customerName = $this->requiredText($data['customer_name'] ?? null, 'نام مشتری', 191);
-        $customerMobile = $this->normalizeMobile((string) ($data['customer_mobile'] ?? ''));
-        if ($customerMobile === '') {
-            throw new RuntimeException('شماره موبایل مشتری الزامی است.');
-        }
+        $customerMobile = $this->normalizeMobile((string) ($data['customer_mobile'] ?? '')) ?: null;
         $commercial = [
             'event_id' => (int) $event['id'],
             'seller_user_id' => get_current_user_id(),
@@ -630,7 +624,10 @@ final class EventSalesRestApi
                 throw new RuntimeException('تعداد کالا معتبر نیست.');
             }
             $quantityScaled = (int) round($quantity * 10000);
-            $unitPrice = $this->money($line['unit_price_irr'] ?? null, 'قیمت کالا', 1);
+            $unitPrice = $this->storeMoneyToIrr((string) $product->get_price());
+            if ($unitPrice < 1) {
+                throw new RuntimeException('قیمت فروش کالا در ووکامرس معتبر نیست.');
+            }
             $lineTotal = intdiv($quantityScaled * $unitPrice, 10000);
             $result[] = [
                 'wc_product_id' => $wcProductId,

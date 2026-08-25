@@ -52,6 +52,9 @@ final class EventCustomerSyncRuntime
     private function resolveCustomer(WC_Order $order): int
     {
         $phone = $this->normalizePhone((string) $order->get_billing_phone());
+        if ($phone === '') {
+            return 0;
+        }
         $name = trim((string) $order->get_formatted_billing_full_name());
         if ($name === '') {
             $name = 'مشتری ایونت';

@@ -99,7 +99,7 @@ final class EventSalesPage
         </section>
         <section class="event-screen is-active" data-screen="sale">
             <div class="event-app__event"><label>ایونت فعال<select data-event-select><option value="">انتخاب ایونت</option></select></label><button type="button" data-refresh>↻</button></div>
-            <div class="event-app__customer"><input data-customer-name required placeholder="نام مشتری *"><input data-customer-mobile required inputmode="tel" placeholder="شماره موبایل *"></div>
+            <div class="event-app__customer"><input data-customer-name required placeholder="نام مشتری *"><input data-customer-mobile inputmode="tel" placeholder="شماره موبایل (اختیاری)"></div>
             <div class="event-app__search"><input data-search placeholder="جست‌وجوی کالا یا بارکد"><span>⌕</span></div>
             <div class="event-app__products" data-products><div class="event-app__empty">ابتدا ایونت را انتخاب کنید.</div></div>
             <section class="event-cart">
@@ -107,10 +107,10 @@ final class EventSalesPage
                 <div data-cart><div class="event-app__empty">هنوز کالایی اضافه نشده.</div></div>
                 <div class="event-cart__summary">
                     <label><span>جمع کالاها</span><strong data-subtotal>۰ تومان</strong></label>
-                    <label><span>تخفیف</span><input data-discount type="number" min="0" inputmode="numeric" value="0"><em>تومان</em></label>
+                    <label><span>تخفیف</span><strong>۰ تومان</strong></label>
                     <label class="is-total"><span>مبلغ نهایی</span><strong data-total>۰ تومان</strong></label>
                     <label><span>مبلغ پرداختی</span><input data-paid type="number" min="0" inputmode="numeric"><em>تومان</em></label>
-                    <label><span>روش پرداخت</span><select data-payment><option value="pos">کارت‌خوان</option><option value="cash">نقدی</option><option value="transfer">انتقال</option><option value="other">سایر</option></select></label>
+                    <label><span>روش پرداخت</span><select data-payment><option value="pos">کارت‌خوان</option><option value="cash">نقدی</option><option value="card">کارت‌به‌کارت</option></select></label>
                 </div>
                 <button class="event-app__submit" type="button" data-submit>ثبت فروش</button>
             </section>
