@@ -342,6 +342,7 @@ final class EventSalesRestApi
                 try {
                     $result['synced'][] = $this->syncSale($sale);
                 } catch (Throwable $exception) {
+                    $this->recordSyncFailure($uuid, $exception->getMessage());
                     $result['failed'][] = ['client_uuid' => $uuid, 'message' => $exception->getMessage()];
                 }
             }
@@ -384,12 +385,15 @@ final class EventSalesRestApi
             throw new RuntimeException('مبلغ پرداختی نمی‌تواند بیشتر از مبلغ نهایی باشد.');
         }
         $paymentMethod = sanitize_key((string) ($data['payment_method'] ?? 'cash'));
-        if (!in_array($paymentMethod, ['cash', 'pos', 'card', 'transfer', 'credit', 'mixed'], true)) {
+        if (!in_array($paymentMethod, ['cash', 'pos', 'card', 'transfer', 'credit', 'mixed', 'other'], true)) {
             throw new RuntimeException('روش پرداخت معتبر نیست.');
         }
         $occurredAt = $this->dateTime($data['occurred_at'] ?? gmdate('Y-m-d H:i:s'), 'زمان فروش');
-        $customerName = $this->requiredText($data['customer_name'] ?? 'مشتری ایونت', 'نام مشتری', 191);
-        $customerMobile = preg_replace('/\D+/', '', (string) ($data['customer_mobile'] ?? '')) ?: null;
+        $customerName = $this->requiredText($data['customer_name'] ?? null, 'نام مشتری', 191);
+        $customerMobile = $this->normalizeMobile((string) ($data['customer_mobile'] ?? ''));
+        if ($customerMobile === '') {
+            throw new RuntimeException('شماره موبایل مشتری الزامی است.');
+        }
         $commercial = [
             'event_id' => (int) $event['id'],
             'seller_user_id' => get_current_user_id(),
@@ -409,7 +413,7 @@ final class EventSalesRestApi
         ];
         $hash = hash('sha256', (string) wp_json_encode($commercial));
         $existing = $this->existingSale($clientUuid);
-        if ($existing !== null) {
+        if ($existing !== null && (string) $existing['status'] === 'synced') {
             if (!hash_equals((string) $existing['payload_hash'], $hash)) {
                 throw new RuntimeException('این فروش آفلاین قبلاً با اطلاعات متفاوت ثبت شده است.');
             }
@@ -417,7 +421,7 @@ final class EventSalesRestApi
             return $this->formatSale($existing) + ['idempotent' => true];
         }
 
-        return $this->transactions->run(function () use (
+        return (function () use (
             $clientUuid,
             $hash,
             $event,
@@ -433,7 +437,8 @@ final class EventSalesRestApi
         ): array {
             global $wpdb;
             $now = current_time('mysql', true);
-            $inserted = $wpdb->insert($wpdb->prefix . 'rishe_event_sales', [
+            $existing = $this->existingSale($clientUuid);
+            $inserted = $existing === null ? $wpdb->insert($wpdb->prefix . 'rishe_event_sales', [
                 'public_id' => wp_generate_uuid4(),
                 'client_uuid' => $clientUuid,
                 'payload_hash' => $hash,
@@ -460,7 +465,7 @@ final class EventSalesRestApi
             ], [
                 '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%s',
                 '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s',
-            ]);
+            ]) : 1;
             if ($inserted === false) {
                 $duplicate = $this->existingSale($clientUuid);
                 if ($duplicate !== null && hash_equals((string) $duplicate['payload_hash'], $hash)) {
@@ -468,8 +473,9 @@ final class EventSalesRestApi
                 }
                 throw new RuntimeException('ثبت اولیه فروش ایونت انجام نشد: ' . $wpdb->last_error);
             }
-            $saleId = (int) $wpdb->insert_id;
-            $order = wc_create_order(['status' => 'pending', 'created_via' => 'rishe-event-app']);
+            $saleId = $existing === null ? (int) $wpdb->insert_id : (int) $existing['id'];
+            $order = !empty($existing['wc_order_id']) ? wc_get_order((int) $existing['wc_order_id']) : null;
+            $order = $order ?: wc_create_order(['status' => 'pending', 'created_via' => 'rishe-event-app']);
             if (!$order) {
                 throw new RuntimeException('ساخت سفارش ووکامرس انجام نشد.');
             }
@@ -489,16 +495,33 @@ final class EventSalesRestApi
             }
             $currency = strtoupper((string) get_woocommerce_currency());
             $order->set_currency($currency);
+            $order->save();
+            $wpdb->update($wpdb->prefix . 'rishe_event_sales', [
+                'wc_order_id' => (int) $order->get_id(),
+                'status' => 'order_created',
+                'updated_at' => $now,
+            ], ['id' => $saleId], ['%d', '%s', '%s'], ['%d']);
+            $existingProductIds = [];
+            foreach ($order->get_items('line_item') as $orderItem) {
+                $existingProductIds[] = (int) $orderItem->get_product_id();
+                $variationId = (int) $orderItem->get_variation_id();
+                if ($variationId > 0) {
+                    $existingProductIds[] = $variationId;
+                }
+            }
             $cogs = 0;
             foreach ($normalized as $line) {
                 $product = wc_get_product((int) $line['wc_product_id']);
                 if (!$product) {
                     throw new RuntimeException('یکی از کالاهای فروش در ووکامرس پیدا نشد.');
                 }
-                $order->add_product($product, $line['quantity_scaled'] / 10000, [
-                    'subtotal' => $this->irrToStoreMoney((int) $line['line_total_irr']),
-                    'total' => $this->irrToStoreMoney((int) $line['line_total_irr']),
-                ]);
+                if (!in_array((int) $line['wc_product_id'], $existingProductIds, true)) {
+                    $order->add_product($product, $line['quantity_scaled'] / 10000, [
+                        'subtotal' => $this->irrToStoreMoney((int) $line['line_total_irr']),
+                        'total' => $this->irrToStoreMoney((int) $line['line_total_irr']),
+                    ]);
+                    $existingProductIds[] = (int) $line['wc_product_id'];
+                }
                 $reservationId = $this->inventory->reserveStock([
                     'product_id' => (int) $line['rishe_product_id'],
                     'warehouse_id' => (int) $event['warehouse_id'],
@@ -509,7 +532,7 @@ final class EventSalesRestApi
                 ], get_current_user_id());
                 $committed = $this->inventory->commitReservation($reservationId, get_current_user_id());
                 $cogs += (int) $committed['cogs_irr'];
-                $lineInserted = $wpdb->insert($wpdb->prefix . 'rishe_event_sale_lines', [
+                $lineInserted = $wpdb->replace($wpdb->prefix . 'rishe_event_sale_lines', [
                     'event_sale_id' => $saleId,
                     'wc_product_id' => (int) $line['wc_product_id'],
                     'rishe_product_id' => (int) $line['rishe_product_id'],
@@ -533,7 +556,7 @@ final class EventSalesRestApi
             }
             $methodTitles = [
                 'cash' => 'نقدی', 'pos' => 'کارت‌خوان', 'card' => 'کارت‌به‌کارت',
-                'transfer' => 'انتقال بانکی', 'credit' => 'اعتباری', 'mixed' => 'ترکیبی',
+                'transfer' => 'انتقال بانکی', 'credit' => 'اعتباری', 'mixed' => 'ترکیبی', 'other' => 'سایر',
             ];
             $order->set_payment_method('rishe_event_' . $paymentMethod);
             $order->set_payment_method_title($methodTitles[$paymentMethod]);
@@ -577,7 +600,7 @@ final class EventSalesRestApi
             ], 'event-sale-' . $clientUuid);
 
             return $this->formatSale($this->existingSale($clientUuid) ?? []) + ['idempotent' => false];
-        });
+        })();
     }
 
     /** @param list<array<string, mixed>> $lines @return list<array<string, mixed>> */
@@ -964,6 +987,33 @@ final class EventSalesRestApi
         $value = number_format($scaled / 10000, 4, '.', '');
 
         return rtrim(rtrim($value, '0'), '.') ?: '0';
+    }
+
+    private function normalizeMobile(string $value): string
+    {
+        $digits = preg_replace('/\D+/', '', $value) ?: '';
+        if (str_starts_with($digits, '0098')) {
+            $digits = '0' . substr($digits, 4);
+        } elseif (str_starts_with($digits, '98') && strlen($digits) >= 12) {
+            $digits = '0' . substr($digits, 2);
+        } elseif (str_starts_with($digits, '9') && strlen($digits) === 10) {
+            $digits = '0' . $digits;
+        }
+
+        return preg_match('/^09\d{9}$/', $digits) ? $digits : '';
+    }
+
+    private function recordSyncFailure(string $clientUuid, string $message): void
+    {
+        if (!wp_is_uuid($clientUuid)) {
+            return;
+        }
+        global $wpdb;
+        $wpdb->update($wpdb->prefix . 'rishe_event_sales', [
+            'status' => 'sync_failed',
+            'error_message' => mb_substr($message, 0, 1000),
+            'updated_at' => current_time('mysql', true),
+        ], ['client_uuid' => $clientUuid], ['%s', '%s', '%s'], ['%s']);
     }
 
     /** @param callable(): array<string, mixed> $operation */

@@ -84,6 +84,7 @@ final class EventSalesPage
     <link rel="manifest" href="<?php echo esc_url(home_url('/rishe-event-app/manifest.webmanifest')); ?>">
     <link rel="icon" href="<?php echo esc_url(RISHE_URL . 'assets/event-app/icon.svg'); ?>" type="image/svg+xml">
     <link rel="stylesheet" href="<?php echo esc_url(RISHE_URL . 'assets/event-app/app.css?ver=' . RISHE_VERSION); ?>">
+    <link rel="stylesheet" href="<?php echo esc_url(RISHE_URL . 'assets/event-app/pos-v23.css?ver=' . RISHE_VERSION); ?>">
 </head>
 <body>
 <div class="event-app" id="rishe-event-app">
@@ -92,9 +93,13 @@ final class EventSalesPage
         <div class="event-app__state"><i data-online></i><span data-online-text>در حال بررسی اتصال</span><b data-pending>۰</b></div>
     </header>
     <main>
+        <section class="event-dashboard">
+            <div><small>ایونت فعال</small><strong data-active-event>—</strong><span data-seller-name>فروشنده</span></div>
+            <div class="event-dashboard__stats"><article><small>فروش امروز</small><b data-today-amount>۰ تومان</b></article><article><small>اقلام فروخته‌شده</small><b data-today-items>۰</b></article><article><small>در انتظار سینک</small><b data-dashboard-pending>۰</b></article></div>
+        </section>
         <section class="event-screen is-active" data-screen="sale">
             <div class="event-app__event"><label>ایونت فعال<select data-event-select><option value="">انتخاب ایونت</option></select></label><button type="button" data-refresh>↻</button></div>
-            <div class="event-app__customer"><input data-customer-name placeholder="نام مشتری"><input data-customer-mobile inputmode="tel" placeholder="موبایل (اختیاری)"></div>
+            <div class="event-app__customer"><input data-customer-name required placeholder="نام مشتری *"><input data-customer-mobile required inputmode="tel" placeholder="شماره موبایل *"></div>
             <div class="event-app__search"><input data-search placeholder="جست‌وجوی کالا یا بارکد"><span>⌕</span></div>
             <div class="event-app__products" data-products><div class="event-app__empty">ابتدا ایونت را انتخاب کنید.</div></div>
             <section class="event-cart">
@@ -105,7 +110,7 @@ final class EventSalesPage
                     <label><span>تخفیف</span><input data-discount type="number" min="0" inputmode="numeric" value="0"><em>تومان</em></label>
                     <label class="is-total"><span>مبلغ نهایی</span><strong data-total>۰ تومان</strong></label>
                     <label><span>مبلغ پرداختی</span><input data-paid type="number" min="0" inputmode="numeric"><em>تومان</em></label>
-                    <label><span>روش پرداخت</span><select data-payment><option value="pos">کارت‌خوان</option><option value="cash">نقدی</option><option value="card">کارت‌به‌کارت</option><option value="transfer">انتقال بانکی</option><option value="mixed">ترکیبی</option><option value="credit">اعتباری</option></select></label>
+                    <label><span>روش پرداخت</span><select data-payment><option value="pos">کارت‌خوان</option><option value="cash">نقدی</option><option value="transfer">انتقال</option><option value="other">سایر</option></select></label>
                 </div>
                 <button class="event-app__submit" type="button" data-submit>ثبت فروش</button>
             </section>
@@ -117,6 +122,7 @@ final class EventSalesPage
     </main>
     <nav class="event-app__nav"><button class="is-active" data-go="sale"><span>＋</span>فروش جدید</button><button data-go="queue"><span>↻</span>صف سینک <b data-nav-pending>۰</b></button></nav>
     <div class="event-app__toast" data-toast hidden></div>
+    <div class="event-receipt" data-receipt hidden><div><span class="event-receipt__check">✓</span><h2>فروش با موفقیت ثبت شد</h2><p>شماره رسید</p><strong data-receipt-number></strong><small data-receipt-sync></small><button type="button" data-close-receipt>فروش بعدی</button></div></div>
 </div>
 <script>window.risheEventApp=<?php echo wp_json_encode($config, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;</script>
 <script src="<?php echo esc_url(RISHE_URL . 'assets/event-app/app.js?ver=' . RISHE_VERSION); ?>" defer></script>
