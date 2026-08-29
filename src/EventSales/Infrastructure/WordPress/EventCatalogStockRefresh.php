@@ -137,11 +137,11 @@ final class EventCatalogStockRefresh
                 || !$product->managing_stock()) {
                 continue;
             }
-            $this->syncProduct($product, $warehouseId);
+            $this->syncProduct($product, $warehouseId, $eventId);
         }
     }
 
-    private function syncProduct(object $product, int $warehouseId): void
+    private function syncProduct(object $product, int $warehouseId, int $eventId): void
     {
         global $wpdb;
 
@@ -211,7 +211,7 @@ final class EventCatalogStockRefresh
 
         update_post_meta($wcProductId, '_rishe_last_event_catalog_stock_pull', gmdate('c'));
         $this->audit->record('event_sales.catalog.stock_refreshed', 'woocommerce_product', (string) $wcProductId, [
-            'event_id' => $eventId ?? null,
+            'event_id' => $eventId,
             'warehouse_id' => $warehouseId,
             'target_scaled' => $targetScaled,
             'previous_scaled' => $currentScaled,
