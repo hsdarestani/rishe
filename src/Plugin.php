@@ -11,6 +11,7 @@ use Rishe\Analytics\Infrastructure\WordPress\AnalyticsRuntime;
 use Rishe\B2B\Infrastructure\WordPress\B2BRestApi;
 use Rishe\Deployment\Infrastructure\WordPress\RisheCliRegistrar;
 use Rishe\EventSales\Infrastructure\WordPress\EventCustomerSyncRuntime;
+use Rishe\EventSales\Infrastructure\WordPress\EventSalesDeviceAuth;
 use Rishe\EventSales\Infrastructure\WordPress\EventSalesPage;
 use Rishe\EventSales\Infrastructure\WordPress\EventSalesRestApi;
 use Rishe\Infrastructure\Database\Migrator;
@@ -53,6 +54,7 @@ final class Plugin
         (new RestrictedAdminShell())->register();
         (new BusinessDialogCompatibility())->register();
         (new PersianAdminLocalization())->register();
+        (new EventSalesDeviceAuth())->register();
         (new EventSalesPage())->register();
         (new EventCustomerSyncRuntime())->register();
         (new InventoryInitialCostAdmin())->register();
