@@ -67,10 +67,12 @@ final class PersianLocalizationTest extends TestCase
             $root . '/src/Infrastructure/Database/Migrations/CreateAccountingReviewAndEventSalesTables.php'
         );
         $app = file_get_contents($root . '/assets/event-app/app.js');
+        $page = file_get_contents($root . '/src/EventSales/Infrastructure/WordPress/EventSalesPage.php');
 
         self::assertIsString($plugin);
         self::assertIsString($migration);
         self::assertIsString($app);
+        self::assertIsString($page);
         self::assertStringContainsString('AccountingApprovalRestApi', $plugin);
         self::assertStringContainsString('EventSalesDeviceAuth', $plugin);
         self::assertStringContainsString('EventSalesRestApi', $plugin);
@@ -79,6 +81,8 @@ final class PersianLocalizationTest extends TestCase
         self::assertStringContainsString("indexedDB.open('rishe-event-sales'", $app);
         self::assertStringContainsString("window.addEventListener('online'", $app);
         self::assertStringContainsString('RisheEventAndroid', $app);
+        self::assertStringContainsString("private const REWRITE_VERSION = '2026082901'", $page);
+        self::assertStringContainsString("add_action('template_redirect', [\$this, 'dispatch'], 0)", $page);
     }
 
     public function testNewToolsDoNotAddSeparateDailyMenuItems(): void
@@ -182,8 +186,8 @@ final class PersianLocalizationTest extends TestCase
     {
         $plugin = file_get_contents(dirname(__DIR__, 3) . '/rishe.php');
         self::assertIsString($plugin);
-        self::assertStringContainsString('Version: 2.3.2', $plugin);
-        self::assertStringContainsString("define('RISHE_VERSION', '2.3.2');", $plugin);
+        self::assertStringContainsString('Version: 2.3.3', $plugin);
+        self::assertStringContainsString("define('RISHE_VERSION', '2.3.3');", $plugin);
         self::assertStringContainsString("define('RISHE_DB_VERSION', '2026080102');", $plugin);
     }
 }
