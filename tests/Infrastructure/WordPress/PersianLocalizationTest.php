@@ -186,8 +186,8 @@ final class PersianLocalizationTest extends TestCase
     {
         $plugin = file_get_contents(dirname(__DIR__, 3) . '/rishe.php');
         self::assertIsString($plugin);
-        self::assertStringContainsString('Version: 2.3.3', $plugin);
-        self::assertStringContainsString("define('RISHE_VERSION', '2.3.3');", $plugin);
+        self::assertStringContainsString('Version: 2.3.4', $plugin);
+        self::assertStringContainsString("define('RISHE_VERSION', '2.3.4');", $plugin);
         self::assertStringContainsString("define('RISHE_DB_VERSION', '2026080102');", $plugin);
     }
 }
