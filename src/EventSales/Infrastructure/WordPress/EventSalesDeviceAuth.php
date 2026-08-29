@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Rishe\EventSales\Infrastructure\WordPress;
 
+use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
+use WP_User;
 
 final class EventSalesDeviceAuth
 {
     private const COOKIE = 'rishe_event_device';
+    private const HEADER_SERVER_KEY = 'HTTP_X_RISHE_EVENT_TOKEN';
     private const META = 'rishe_event_device_tokens';
     private const TTL = 315360000; // 10 years.
     private const MAX_DEVICES = 12;
@@ -18,6 +21,7 @@ final class EventSalesDeviceAuth
     public function register(): void
     {
         add_filter('determine_current_user', [$this, 'authenticate'], 30);
+        add_filter('rest_authentication_errors', [$this, 'authenticateRest'], 5);
         add_action('rest_api_init', [$this, 'registerRoutes']);
     }
 
@@ -28,7 +32,7 @@ final class EventSalesDeviceAuth
             return $resolved;
         }
 
-        $token = $this->cookieToken();
+        $token = $this->requestToken();
         if ($token === '') {
             return 0;
         }
@@ -36,8 +40,42 @@ final class EventSalesDeviceAuth
         return $this->userIdFromToken($token);
     }
 
+    public function authenticateRest($result)
+    {
+        if ($result !== null) {
+            return $result;
+        }
+
+        $token = $this->headerToken();
+        if ($token === '') {
+            return null;
+        }
+
+        $userId = $this->userIdFromToken($token);
+        if ($userId <= 0) {
+            return new WP_Error(
+                'rishe_event_device_invalid',
+                __('نشست ایونت معتبر نیست. دوباره وارد شوید.', 'rishe'),
+                ['status' => 401]
+            );
+        }
+
+        wp_set_current_user($userId);
+        $this->touch($userId, $token);
+
+        // A non-null success result prevents WordPress cookie/nonce authentication
+        // from overriding the explicitly authenticated native device token.
+        return true;
+    }
+
     public function registerRoutes(): void
     {
+        register_rest_route('rishe/v1', '/event-sales/device-login', [
+            'methods' => WP_REST_Server::CREATABLE,
+            'callback' => [$this, 'deviceLogin'],
+            'permission_callback' => '__return_true',
+        ]);
+
         register_rest_route('rishe/v1', '/event-sales/device-session', [
             [
                 'methods' => WP_REST_Server::CREATABLE,
@@ -54,11 +92,40 @@ final class EventSalesDeviceAuth
         ]);
     }
 
+    public function deviceLogin(WP_REST_Request $request): WP_REST_Response
+    {
+        $username = sanitize_text_field((string) $request->get_param('username'));
+        $password = (string) $request->get_param('password');
+        if ($username === '' || $password === '') {
+            return new WP_REST_Response(['message' => 'نام کاربری و رمز عبور را وارد کنید.'], 400);
+        }
+
+        $user = wp_authenticate($username, $password);
+        if (!$user instanceof WP_User) {
+            return new WP_REST_Response(['message' => 'نام کاربری یا رمز عبور صحیح نیست.'], 401);
+        }
+        if (!$this->canSell($user)) {
+            return new WP_REST_Response(['message' => 'این حساب اجازه فروش ایونت ندارد.'], 403);
+        }
+
+        $token = $this->issueToken((int) $user->ID);
+
+        return new WP_REST_Response([
+            'active' => true,
+            'device_token' => $token,
+            'user' => [
+                'id' => (int) $user->ID,
+                'name' => (string) $user->display_name,
+            ],
+            'expires_at' => gmdate('c', time() + self::TTL),
+        ], 201);
+    }
+
     public function deviceSession(WP_REST_Request $request): WP_REST_Response
     {
         unset($request);
         $userId = get_current_user_id();
-        $current = $this->cookieToken();
+        $current = $this->requestToken();
 
         if ($current !== '' && $this->userIdFromToken($current) === $userId) {
             $this->touch($userId, $current);
@@ -72,6 +139,45 @@ final class EventSalesDeviceAuth
             ]);
         }
 
+        $token = $this->issueToken($userId);
+        $this->setCookie($token);
+
+        return new WP_REST_Response([
+            'active' => true,
+            'reused' => false,
+            'user_id' => $userId,
+            'expires_at' => gmdate('c', time() + self::TTL),
+        ], 201);
+    }
+
+    public function revokeDeviceSession(WP_REST_Request $request): WP_REST_Response
+    {
+        unset($request);
+        $userId = get_current_user_id();
+        $token = $this->requestToken();
+        if ($token !== '') {
+            $parts = $this->tokenParts($token);
+            if ($parts !== null && $parts['user_id'] === $userId) {
+                $tokens = $this->tokensFor($userId);
+                unset($tokens[hash('sha256', $parts['secret'])]);
+                update_user_meta($userId, self::META, $tokens);
+            }
+        }
+
+        $this->clearCookie();
+
+        return new WP_REST_Response(['active' => false]);
+    }
+
+    private function canSell(WP_User $user): bool
+    {
+        return user_can($user, 'rishe_sell_event')
+            || user_can($user, 'rishe_manage_sales')
+            || user_can($user, 'manage_rishe');
+    }
+
+    private function issueToken(int $userId): string
+    {
         $secret = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
         $token = $userId . '.' . $secret;
         $hash = hash('sha256', $secret);
@@ -88,33 +194,8 @@ final class EventSalesDeviceAuth
         }
 
         update_user_meta($userId, self::META, $tokens);
-        $this->setCookie($token);
 
-        return new WP_REST_Response([
-            'active' => true,
-            'reused' => false,
-            'user_id' => $userId,
-            'expires_at' => gmdate('c', $now + self::TTL),
-        ], 201);
-    }
-
-    public function revokeDeviceSession(WP_REST_Request $request): WP_REST_Response
-    {
-        unset($request);
-        $userId = get_current_user_id();
-        $token = $this->cookieToken();
-        if ($token !== '') {
-            $parts = $this->tokenParts($token);
-            if ($parts !== null && $parts['user_id'] === $userId) {
-                $tokens = $this->tokensFor($userId);
-                unset($tokens[hash('sha256', $parts['secret'])]);
-                update_user_meta($userId, self::META, $tokens);
-            }
-        }
-
-        $this->clearCookie();
-
-        return new WP_REST_Response(['active' => false]);
+        return $token;
     }
 
     private function userIdFromToken(string $token): int
@@ -169,6 +250,23 @@ final class EventSalesDeviceAuth
         }
         $tokens[$hash]['last_seen_at'] = time();
         update_user_meta($userId, self::META, $tokens);
+    }
+
+    private function requestToken(): string
+    {
+        $header = $this->headerToken();
+        if ($header !== '') {
+            return $header;
+        }
+
+        return $this->cookieToken();
+    }
+
+    private function headerToken(): string
+    {
+        return isset($_SERVER[self::HEADER_SERVER_KEY])
+            ? sanitize_text_field(wp_unslash((string) $_SERVER[self::HEADER_SERVER_KEY]))
+            : '';
     }
 
     private function cookieToken(): string
