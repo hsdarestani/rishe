@@ -55,9 +55,11 @@ final class EventCatalogStockRefresh
         if (!preg_match('#^/rishe/v1/event-sales/events/(\d+)/catalog$#', $route, $matches)) {
             return $response;
         }
-        if (!current_user_can('rishe_sell_event')
+        if (
+            !current_user_can('rishe_sell_event')
             && !current_user_can('rishe_manage_sales')
-            && !current_user_can('manage_rishe')) {
+            && !current_user_can('manage_rishe')
+        ) {
             return $response;
         }
 
@@ -131,10 +133,12 @@ final class EventCatalogStockRefresh
         ]);
 
         foreach (is_array($products) ? $products : [] as $product) {
-            if (!is_object($product)
+            if (
+                !is_object($product)
                 || !method_exists($product, 'get_id')
                 || !method_exists($product, 'managing_stock')
-                || !$product->managing_stock()) {
+                || !$product->managing_stock()
+            ) {
                 continue;
             }
             $this->syncProduct($product, $warehouseId, $eventId);
