@@ -6,20 +6,20 @@ namespace Rishe\EventSales\Infrastructure\WordPress;
 
 final class EventSalesPage
 {
-    private const REWRITE_VERSION = '2026080101';
+    private const REWRITE_VERSION = '2026082901';
 
     public function register(): void
     {
         add_action('init', [$this, 'rewrites']);
         add_filter('query_vars', [$this, 'queryVars']);
-        add_action('template_redirect', [$this, 'dispatch']);
+        add_action('template_redirect', [$this, 'dispatch'], 0);
     }
 
     public function rewrites(): void
     {
         add_rewrite_rule('^rishe-event-app/?$', 'index.php?rishe_event_app=1', 'top');
-        add_rewrite_rule('^rishe-event-app/manifest\.webmanifest$', 'index.php?rishe_event_manifest=1', 'top');
-        add_rewrite_rule('^rishe-event-app/sw\.js$', 'index.php?rishe_event_sw=1', 'top');
+        add_rewrite_rule('^rishe-event-app/manifest\\.webmanifest$', 'index.php?rishe_event_manifest=1', 'top');
+        add_rewrite_rule('^rishe-event-app/sw\\.js$', 'index.php?rishe_event_sw=1', 'top');
         if ((string) get_option('rishe_event_rewrite_version', '') !== self::REWRITE_VERSION) {
             flush_rewrite_rules(false);
             update_option('rishe_event_rewrite_version', self::REWRITE_VERSION, false);
@@ -38,15 +38,38 @@ final class EventSalesPage
 
     public function dispatch(): void
     {
-        if ((int) get_query_var('rishe_event_manifest') === 1) {
+        $requestPath = $this->requestPath();
+        $appPath = $this->homePath('/rishe-event-app/');
+        $manifestPath = $this->homePath('/rishe-event-app/manifest.webmanifest');
+        $swPath = $this->homePath('/rishe-event-app/sw.js');
+
+        if ((int) get_query_var('rishe_event_manifest') === 1 || $requestPath === $manifestPath) {
             $this->manifest();
         }
-        if ((int) get_query_var('rishe_event_sw') === 1) {
+        if ((int) get_query_var('rishe_event_sw') === 1 || $requestPath === $swPath) {
             $this->serviceWorker();
         }
-        if ((int) get_query_var('rishe_event_app') === 1) {
+        if (
+            (int) get_query_var('rishe_event_app') === 1
+            || rtrim($requestPath, '/') === rtrim($appPath, '/')
+        ) {
             $this->app();
         }
+    }
+
+    private function requestPath(): string
+    {
+        $requestUri = isset($_SERVER['REQUEST_URI']) ? (string) $_SERVER['REQUEST_URI'] : '/';
+        $path = wp_parse_url($requestUri, PHP_URL_PATH);
+
+        return is_string($path) && $path !== '' ? $path : '/';
+    }
+
+    private function homePath(string $path): string
+    {
+        $resolved = wp_parse_url(home_url($path), PHP_URL_PATH);
+
+        return is_string($resolved) && $resolved !== '' ? $resolved : $path;
     }
 
     private function app(): never
