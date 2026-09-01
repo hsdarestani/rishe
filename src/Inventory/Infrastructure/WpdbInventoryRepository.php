@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rishe\Inventory\Infrastructure;
 
 use Rishe\Inventory\Application\InventoryRepository;
+use Rishe\Inventory\Domain\Exception\InventoryDomainException;
 use Rishe\Inventory\Domain\FifoAllocator;
 use Rishe\Inventory\Domain\Quantity;
 use RuntimeException;
@@ -62,7 +63,35 @@ final class WpdbInventoryRepository implements InventoryRepository
 
     public function reserve(array $data): array
     {
-        return $this->mutations->reserve($data);
+        try {
+            return $this->mutations->reserve($data);
+        } catch (InventoryDomainException $exception) {
+            if ($exception->getMessage() !== 'Reservation reference already exists and cannot be reused.') {
+                throw $exception;
+            }
+
+            global $wpdb;
+            $table = $wpdb->prefix . 'rishe_stock_reservations';
+            $existing = $wpdb->get_row($wpdb->prepare(
+                "SELECT id,status,quantity_scaled FROM {$table}
+                 WHERE reference_type=%s AND reference_id=%s AND product_id=%d AND warehouse_id=%d
+                 LIMIT 1 FOR UPDATE",
+                $data['reference_type'],
+                $data['reference_id'],
+                $data['product_id'],
+                $data['warehouse_id']
+            ), ARRAY_A);
+
+            if (
+                is_array($existing)
+                && (string) $existing['status'] === 'committed'
+                && (int) $existing['quantity_scaled'] === (int) $data['quantity_scaled']
+            ) {
+                return ['id' => (int) $existing['id'], 'idempotent' => true];
+            }
+
+            throw $exception;
+        }
     }
 
     public function releaseReservation(int $reservationId, int $actorUserId): array
